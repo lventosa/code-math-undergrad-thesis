@@ -1,0 +1,33 @@
+project:
+  name: code-tfg
+  syncFilters:
+    - exclude:
+      - .venv/*
+      - .git/*
+      - .idea/*
+      - '*/__pycache__/*'
+
+
+containers: 
+  - projectDir: /workspace/project
+    image: pytorch/pytorch:latest
+    volumeMounts: 
+      - name: workspace
+        mountPath: /workspace
+
+
+instances: 
+  - name: aws-1
+    provider: aws
+    parameters: 
+      region: eu-west-3
+      instanceType: t3.micro
+      volumes: 
+        - name: workspace
+          parameters: 
+            size: 20
+
+
+scripts:
+  main: |
+    python main.py
