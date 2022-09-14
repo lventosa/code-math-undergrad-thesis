@@ -5,28 +5,36 @@ I am replicating A. Z. Wagner's work in the following paper: https://arxiv.org/a
 
 His code can be found here: https://github.com/zawagner22/cross-entropy-for-combinatorics
 """
-
+import logging
 import math
+import sys
 from typing import List
 
 import networkx as nx
 import numpy as np
 
-import torch 
-import torch.nn as nn
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.optimizers import Adam
 
 
-N_VERTICES: int = 19
-N_EDGES: int = int(N_VERTICES*(N_VERTICES-1)/2)
+N_VERTICES = 19
+N_EDGES = int(N_VERTICES*(N_VERTICES-1)/2)
+
+# The input vector will have size 2*N_EDGES, where the first N_EDGES letters encode our partial word (with zeros on
+#   the positions we haven't considered yet), and the next N_EDGES bits one-hot encode which letter we are considering now.
+#   For instance, [0,1,0,0,   0,0,1,0] means we have the partial word 01 and we are considering the third letter now.
+SPACE = 2*N_EDGES 
 
 # At each state (pair of vertices) we only have two actions: to add an edge joining those two 
 #   vertices or to leave them unconnected (no edge)
-N_ACTIONS: int = 2 
+N_ACTIONS = 2 
 
 # The following values are set arbitrarily and can be modified for experimental purposes
-N_ITERATIONS: int = 100000 
-BATCH_SIZE: int = 100 # Number of episodes in each iteration
-PERCENTILE: int = 70 # We will keep the first 70% episodes sorted by reward, those will be our elite
+N_ITERATIONS = 100000
+LEARNING_RATE = 0.0001 
+BATCH_SIZE = 100 # Number of episodes in each iteration
+PERCENTILE = 70 # We will keep the first 70% episodes sorted by reward, those will be our elite
 
 # Number of neurons in each hidden layer (arbitrary)
 FIRST_LAYER_SIZE = 128 
@@ -34,47 +42,13 @@ SECOND_LAYER_SIZE = 64
 THIRD_LAYER_SIZE = 4
 
 
-class NeuralNetwork(nn.Module): # TODO: docstring
-    """
-    
-    """
-    def __init__(self):
-        """
-        Here we define the operations for the neural network (NN). Our 
-        NN has an input layer, two hidden layers and an output layer. A 
-        tensor is passed sequentially through operations. 
+logging.basicConfig(
+    stream=sys.stdout,
+    datefmt='%Y-%m-%d %H:%M',
+    format='%(asctime)s | %(message)s'
+)
 
-        We pass to each layer the input size and the output size, in this
-        order. Note that the output size of a layer becomes the input size
-        of the next layer.
-        """
-        super(NeuralNetwork, self).__init__()
-        self.net = nn.Sequential(
-            # Input layer
-            nn.Linear(N_EDGES, FIRST_LAYER_SIZE),
-            nn.ReLU(),
-
-            # First hidden layer
-            nn.Linear(FIRST_LAYER_SIZE, SECOND_LAYER_SIZE), 
-            nn.ReLU(),
-
-            # Second hidden layer
-            nn.Linear(SECOND_LAYER_SIZE, THIRD_LAYER_SIZE),
-            nn.ReLU(),
-
-            # Output layer
-            nn.Linear(THIRD_LAYER_SIZE, N_ACTIONS), 
-        )
-
-    def forward(self, x: torch.Tensor):
-        """
-        This function must exist since we are creating our neural 
-        network using Pytorch's nn.Module. 
-
-        It takes a tensor x and passes it through all the operations 
-        defined in the __init__ method.
-        """
-        return self.net(x)
+logger = logging.getLogger(__name__)
 
 
 def build_graph_at_given_state(state: np.array) -> nx.Graph: 
@@ -118,7 +92,7 @@ def calculate_matching_number(graph) -> int:
     return len(max_matching)
 
 
-def calculate_reward(lambda1: float, mu: int) -> float:
+def calculate_reward(graph) -> float:
     """
     This function calculates the reward for our reinforcement learning
     problem. The reward depends on the conjecture we are trying to disprove. 
@@ -129,7 +103,13 @@ def calculate_reward(lambda1: float, mu: int) -> float:
     sqrt(N-1) + 1 - (lambda1 + mu) then it is enough to check whether the reward is 
     positive. In such a case, we'll have found a counterexample for the conjecture.
     """
-    return math.sqrt(N_VERTICES-1) + 1 - (lambda1 + mu)
+    # The conjecture assumes our graph is connected. We get rid of unconnected graphs
+    if not nx.is_connected(graph):
+        return -float('inf')
+    else:
+        lambda1 = calculate_max_abs_val_eigenvalue(graph=graph)
+        mu = calculate_matching_number(graph=graph)
+        return math.sqrt(N_VERTICES-1) + 1 - (lambda1 + mu)
 
 
 def restart_environment_and_iterate(agent): # TODO: typing (agent is the neural network)
@@ -138,17 +118,18 @@ def restart_environment_and_iterate(agent): # TODO: typing (agent is the neural 
     is, we restart the states and actions for the agent as well as the
     predicted probabilities.
     """
-    states =  np.zeros([BATCH_SIZE, N_EDGES], dtype=int) # TODO: typing d'aquests multidimensional arrays
+    logger.info('Resetting environment')
+    states =  np.zeros([BATCH_SIZE, SPACE, N_EDGES], dtype=int) # TODO: typing d'aquests multidimensional arrays
     actions = np.zeros([BATCH_SIZE, N_EDGES], dtype = int)
-    next_state = np.zeros([BATCH_SIZE, N_EDGES], dtype = int)
+    next_state = np.zeros([BATCH_SIZE, SPACE], dtype = int)
     # prob = np.zeros(BATCH_SIZE) --> I think this is redundant
     total_rewards = np.zeros([BATCH_SIZE])
 
-    states[:, 0]: int = 1
+    states[:, 0]: int = 1 # Pintem el primer edge
     current_edge: int = 0
-    
+
     while True:
-        prob = agent.predict(states[:,current_edge-1], batch_size = BATCH_SIZE) # TODO: typing (and for the rest of the function)
+        prob = agent.predict(states[:,:,current_edge-1], batch_size = BATCH_SIZE) # TODO: typing (and for the rest of the function)
 
         for episode in range(BATCH_SIZE):
             
@@ -160,7 +141,7 @@ def restart_environment_and_iterate(agent): # TODO: typing (agent is the neural 
             actions[episode][current_edge]: int = action
 
             # We equate next state and current state for the current edge and will adjust next state depending on the action
-            next_state[episode] = states[episode, current_edge] 
+            next_state[episode] = states[episode,:,current_edge] 
 
             if action == 1: # We add that edge to the graph
                 next_state[episode][current_edge]: int = action	
@@ -171,10 +152,21 @@ def restart_environment_and_iterate(agent): # TODO: typing (agent is the neural 
                 terminal: bool = True
 
             if terminal:
-                total_rewards[episode] = calculate_reward(next_state[episode])
+                graph = build_graph_at_given_state(state=states[episode,:,current_edge]) # TODO: make sure this is the correct state we should pass
+                total_rewards[episode] = calculate_reward(graph=graph)
+
+                if total_rewards[episode] > 0: 
+                    logger.info('A counterexample has been found!')
+
+                    # We write the graph into a text file and exit the program
+                    file = open('counterexample_crossentropy.txt', 'w+')
+                    content = str(states[episode,:,current_edge])
+                    file.write(content)
+                    file.close()
+                    exit()
 
             if not terminal:
-                states[episode, current_edge + 1] = next_state[episode]	
+                states[episode,:,current_edge + 1] = next_state[episode]	
 
         current_edge += 1
 
@@ -207,10 +199,26 @@ def select_elites(states_batch, actions_batch, rewards_batch): # TODO: typing an
     return elite_states, elite_actions, elite_rewards
 
 
-def cross_entropy_method(model): # TODO: finish docstring
+def deep_cross_entropy_method(): # TODO: finish docstring
     """
     This is the main function
     """
+    # We add three linear layers as well as their activation layers and a final output layer
+    #   activated by the sigmoid function (so the final result takes values between 0 and 1)
+    model = Sequential()
+    model.add(Dense(FIRST_LAYER_SIZE,  activation='relu'))
+    model.add(Dense(SECOND_LAYER_SIZE, activation='relu'))
+    model.add(Dense(THIRD_LAYER_SIZE, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+
+    # We build the model based on input shapes received
+    model.build((None, SPACE)) 
+
+    model.compile(
+        loss='binary_crossentropy', # Since we predict a binary outcome (whether the graph has a given edge or not)
+        optimizer=Adam(learning_rate = LEARNING_RATE) # Wagner uses SGD as an optimizer
+    ) 
+
     for iter in range(N_ITERATIONS):
         states, actions, total_rewards = restart_environment_and_iterate(agent=model)
         elite_states, elite_actions, elite_rewards = select_elites(
@@ -225,4 +233,4 @@ def cross_entropy_method(model): # TODO: finish docstring
         total_rewards.sort()
 
 if __name__ == '__main__':
-    cross_entropy_method(model=NeuralNetwork)
+    deep_cross_entropy_method()

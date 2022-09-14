@@ -1,3 +1,8 @@
+
+# Documentation covering installation, user instructions and configuration template
+# can be found here: https://spotty.cloud/docs/user-guide/getting-started.html
+
+
 project:
   name: code-tfg
   syncFilters:
@@ -30,4 +35,4 @@ instances:
 
 scripts:
   main: |
-    python main.py
+    python scripts/deep_qlearning_main.py
