@@ -33,8 +33,8 @@ N_ACTIONS = 2
 # The following values are set arbitrarily and can be modified for experimental purposes
 N_ITERATIONS = 100000
 LEARNING_RATE = 0.0001 
-BATCH_SIZE = 100 # Number of episodes in each iteration
-PERCENTILE = 70 # We will keep the first 70% episodes sorted by reward, those will be our elite
+BATCH_SIZE = 1000 # Number of episodes in each iteration
+PERCENTILE = 93 # We will keep the first 93% episodes sorted by reward, those will be our elite
 
 # Number of neurons in each hidden layer (arbitrary)
 FIRST_LAYER_SIZE = 128 
@@ -184,19 +184,19 @@ def select_elites(states_batch, actions_batch, rewards_batch): # TODO: typing an
 
     elite_states = []
     elite_actions = []
-    elite_rewards = []
+    # elite_rewards = []
 	
     for batch_index in range(len(states_batch)):
         if rewards_batch[batch_index] > reward_threshold:
             for item in states_batch[batch_index]:
                 elite_states.append(item.tolist())
             for item in actions_batch[batch_index]:
-                elite_actions.append(item)			
+                elite_actions.append(item)
 
     elite_states = np.array(elite_states, dtype = int)	
     elite_actions = np.array(elite_actions, dtype = int)
 
-    return elite_states, elite_actions, elite_rewards
+    return elite_states, elite_actions
 
 
 def deep_cross_entropy_method(): # TODO: finish docstring
@@ -221,7 +221,8 @@ def deep_cross_entropy_method(): # TODO: finish docstring
 
     for iter in range(N_ITERATIONS):
         states, actions, total_rewards = restart_environment_and_iterate(agent=model)
-        elite_states, elite_actions, elite_rewards = select_elites(
+        states = np.transpose(states, axes=[0,2,1])
+        elite_states, elite_actions = select_elites(
             states_batch=states,
             actions_batch=actions,
             rewards_batch=total_rewards,
