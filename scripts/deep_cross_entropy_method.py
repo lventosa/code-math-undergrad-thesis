@@ -8,7 +8,6 @@ His code can be found here: https://github.com/zawagner22/cross-entropy-for-comb
 import logging
 import math
 import sys
-from typing import List
 
 import networkx as nx
 import numpy as np
@@ -16,6 +15,12 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
+
+from src.graph_utils.graph_theory import (
+    build_graph_at_given_state,
+    calculate_matching_number,
+    calculate_max_abs_val_eigenvalue,
+)
 
 
 N_VERTICES = 19
@@ -49,47 +54,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
-
-def build_graph_at_given_state(state: np.array) -> nx.Graph: 
-    """
-    This function builds a graph from an array representing the state. 
-    """
-    graph = nx.Graph() # TODO: add typing
-    vertices_list: List[int] = list(range(N_VERTICES))
-    graph.add_nodes_from(vertices_list)
-
-    state_index: int = 0
-
-    for i in range(0, N_VERTICES):
-        for j in range(i+1, N_VERTICES):
-            if state[state_index] == 1:
-                graph.add_edge(i,j)
-            state_index += 1
-
-    return graph
-
-
-def calculate_max_abs_val_eigenvalue(graph) -> float:
-    """
-    This function computes the eigenvalues of the adjacency matrix
-    that corresponds to a specific graph. It returns the largest
-    eigenvalue in absolute value.
-    """
-    adjacency_matrix = nx.adjacency_matrix(graph).todense() # TODO: typing
-    eigenvals: np.array = np.linalg.eigvalsh(adjacency_matrix) 
-    eigenvals_abs: np.array = abs(eigenvals)
-    return max(eigenvals_abs)
-
-
-def calculate_matching_number(graph) -> int: 
-    """
-    This function calculates all matchings for a given graph and
-    it returns the matching number (i.e. the length of the maximum
-    matching).
-    """
-    max_matching = nx.max_weight_matching(graph)
-    return len(max_matching)
 
 
 def calculate_reward(graph) -> float:
