@@ -11,9 +11,7 @@ import math
 import sys
 from typing import Tuple
 
-from keras.layers import Dense
 from keras.models import Sequential
-from keras.optimizers import Adam
 import networkx as nx
 import numpy as np
 
@@ -22,6 +20,7 @@ from src.graph_utils.graph_theory import (
     calculate_matching_number,
     calculate_max_abs_val_eigenvalue,
 )
+from src.models.deep_cross_entropy_model import DeepCrossEntropyModel
 from src.rl_environments.env_wagner import EnvWagner
 
 
@@ -90,7 +89,7 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.arr
     current_edge = 0
 
     while True:
-        prob = agent.predict(env.states[:,:,current_edge-1], batch_size = BATCH_SIZE) 
+        prob = agent.model.predict(env.states[:,:,current_edge-1], batch_size = BATCH_SIZE) 
 
         for episode in range(BATCH_SIZE):
             if np.random.rand() < prob[episode]:
@@ -175,21 +174,8 @@ def deep_cross_entropy_method():
     select the elite states and actions that will be used to train
     our agent.
     """
-    # We add three linear layers as well as their activation layers and a final output layer
-    #   activated by the sigmoid function (so the final result takes values between 0 and 1)
-    model = Sequential()
-    model.add(Dense(FIRST_LAYER_SIZE,  activation='relu'))
-    model.add(Dense(SECOND_LAYER_SIZE, activation='relu'))
-    model.add(Dense(THIRD_LAYER_SIZE, activation='relu'))
-    model.add(Dense(1, activation='sigmoid'))
-
-    # We build the model based on input shapes received
-    model.build((None, SPACE)) 
-
-    model.compile(
-        loss='binary_crossentropy', # Since we predict a binary outcome (whether the graph has a given edge or not)
-        optimizer=Adam(learning_rate=LEARNING_RATE) # Wagner uses SGD as an optimizer
-    ) 
+    model = DeepCrossEntropyModel()
+    model.build_and_compile_model()
 
     for iter in range(N_ITERATIONS):
         states, actions, total_rewards = restart_environment_and_iterate(agent=model)
