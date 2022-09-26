@@ -21,6 +21,7 @@ from src.graph_utils.graph_theory import (
     calculate_matching_number,
     calculate_max_abs_val_eigenvalue,
 )
+from src.rl_environments.env_wagner import EnvWagner
 
 
 N_VERTICES = 19
@@ -83,17 +84,13 @@ def restart_environment_and_iterate(agent): # TODO: typing (agent is the neural 
     predicted probabilities.
     """
     logger.info('Resetting environment')
-    states =  np.zeros([BATCH_SIZE, SPACE, N_EDGES], dtype=int) # TODO: typing d'aquests multidimensional arrays
-    actions = np.zeros([BATCH_SIZE, N_EDGES], dtype = int)
-    next_state = np.zeros([BATCH_SIZE, SPACE], dtype = int)
-    # prob = np.zeros(BATCH_SIZE) --> I think this is redundant
-    total_rewards = np.zeros([BATCH_SIZE])
+    env = EnvWagner()
 
-    states[:, 0]: int = 1 # Pintem el primer edge
+    env.states[:, 0]: int = 1 # Pintem el primer edge
     current_edge: int = 0
 
     while True:
-        prob = agent.predict(states[:,:,current_edge-1], batch_size = BATCH_SIZE) # TODO: typing (and for the rest of the function)
+        prob = agent.predict(env.states[:,:,current_edge-1], batch_size = BATCH_SIZE) # TODO: typing (and for the rest of the function)
 
         for episode in range(BATCH_SIZE):
             
@@ -102,13 +99,13 @@ def restart_environment_and_iterate(agent): # TODO: typing (agent is the neural 
             else:
                 action: int = 0
 
-            actions[episode][current_edge]: int = action
+            env.actions[episode][current_edge]: int = action
 
             # We equate next state and current state for the current edge and will adjust next state depending on the action
-            next_state[episode] = states[episode,:,current_edge] 
+            env.next_state[episode] = env.states[episode,:,current_edge] 
 
             if action == 1: # We add that edge to the graph
-                next_state[episode][current_edge]: int = action	
+                env.next_state[episode][current_edge]: int = action	
 
             if current_edge + 1 < N_EDGES:
                 terminal: bool = False
@@ -116,28 +113,31 @@ def restart_environment_and_iterate(agent): # TODO: typing (agent is the neural 
                 terminal: bool = True
 
             if terminal:
-                graph = build_graph_at_given_state(state=states[episode,:,current_edge]) # TODO: make sure this is the correct state we should pass
-                total_rewards[episode] = calculate_reward(graph=graph)
+                graph = build_graph_at_given_state(
+                    state=env.states[episode,:,current_edge],
+                    n_vertices=N_VERTICES,
+                ) # TODO: make sure this is the correct state we should pass
+                env.total_rewards[episode] = calculate_reward(graph=graph)
 
-                if total_rewards[episode] > 0: 
+                if env.total_rewards[episode] > 0: 
                     logger.info('A counterexample has been found!')
 
                     # We write the graph into a text file and exit the program
                     file = open('counterexample_crossentropy.txt', 'w+')
-                    content = str(states[episode,:,current_edge])
+                    content = str(env.states[episode,:,current_edge])
                     file.write(content)
                     file.close()
                     exit()
 
             if not terminal:
-                states[episode,:,current_edge + 1] = next_state[episode]	
+                env.states[episode,:,current_edge + 1] = env.next_state[episode]	
 
         current_edge += 1
 
         if terminal:
             break
 
-    return states, actions, total_rewards
+    return env.states, env.actions, env.total_rewards
 
 
 def select_elites(states_batch, actions_batch, rewards_batch): # TODO: typing and docstrings
