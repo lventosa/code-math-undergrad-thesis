@@ -5,16 +5,17 @@ I am replicating A. Z. Wagner's work in the following paper: https://arxiv.org/a
 
 His code can be found here: https://github.com/zawagner22/cross-entropy-for-combinatorics
 """
+
 import logging
 import math
 import sys
+from typing import Tuple
 
+from keras.layers import Dense
+from keras.models import Sequential
+from keras.optimizers import Adam
 import networkx as nx
 import numpy as np
-
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.optimizers import Adam
 
 from src.graph_utils.graph_theory import (
     build_graph_at_given_state,
@@ -53,11 +54,10 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M',
     format='%(asctime)s | %(message)s'
 )
-
 logger = logging.getLogger(__name__)
 
 
-def calculate_reward(graph) -> float:
+def calculate_reward(graph: nx.Graph) -> float:
     """
     This function calculates the reward for our reinforcement learning
     problem. The reward depends on the conjecture we are trying to disprove. 
@@ -70,14 +70,14 @@ def calculate_reward(graph) -> float:
     """
     # The conjecture assumes our graph is connected. We get rid of unconnected graphs
     if not nx.is_connected(graph):
-        return -float('inf')
+        return -float('inf')   
     else:
         lambda1 = calculate_max_abs_val_eigenvalue(graph=graph)
         mu = calculate_matching_number(graph=graph)
         return math.sqrt(N_VERTICES-1) + 1 - (lambda1 + mu)
 
 
-def restart_environment_and_iterate(agent): # TODO: typing (agent is the neural network)
+def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.array, np.array]: 
     """
     Each time this function is called the environment is reset. That
     is, we restart the states and actions for the agent as well as the
@@ -86,37 +86,36 @@ def restart_environment_and_iterate(agent): # TODO: typing (agent is the neural 
     logger.info('Resetting environment')
     env = EnvWagner()
 
-    env.states[:, 0]: int = 1 # Pintem el primer edge
-    current_edge: int = 0
+    env.states[:, 0] = 1 # Pintem el primer edge
+    current_edge = 0
 
     while True:
-        prob = agent.predict(env.states[:,:,current_edge-1], batch_size = BATCH_SIZE) # TODO: typing (and for the rest of the function)
+        prob = agent.predict(env.states[:,:,current_edge-1], batch_size = BATCH_SIZE) 
 
         for episode in range(BATCH_SIZE):
-            
             if np.random.rand() < prob[episode]:
-                action: int = 1
+                action = 1
             else:
-                action: int = 0
+                action = 0
 
-            env.actions[episode][current_edge]: int = action
+            env.actions[episode][current_edge] = action
 
             # We equate next state and current state for the current edge and will adjust next state depending on the action
             env.next_state[episode] = env.states[episode,:,current_edge] 
 
             if action == 1: # We add that edge to the graph
-                env.next_state[episode][current_edge]: int = action	
+                env.next_state[episode][current_edge] = action	
 
             if current_edge + 1 < N_EDGES:
-                terminal: bool = False
+                terminal = False
             else: 
-                terminal: bool = True
+                terminal = True
 
             if terminal:
                 graph = build_graph_at_given_state(
-                    state=env.states[episode,:,current_edge],
+                    state=env.states[episode,:,current_edge], # TODO: make sure this is the correct state we should pass
                     n_vertices=N_VERTICES,
-                ) # TODO: make sure this is the correct state we should pass
+                ) 
                 env.total_rewards[episode] = calculate_reward(graph=graph)
 
                 if env.total_rewards[episode] > 0: 
@@ -140,15 +139,17 @@ def restart_environment_and_iterate(agent): # TODO: typing (agent is the neural 
     return env.states, env.actions, env.total_rewards
 
 
-def select_elites(states_batch, actions_batch, rewards_batch): # TODO: typing and docstrings
+def select_elites(
+    states_batch: np.array, actions_batch: np.array, rewards_batch: np.array,
+) -> Tuple[np.array, np.array, np.array]:
     """
-    
+    This function selects the top states and actions given 
+    the threshold set by an arbitrary percentage.
     """
     reward_threshold = np.percentile(rewards_batch, PERCENTILE)
 
     elite_states = []
     elite_actions = []
-    # elite_rewards = []
 	
     for batch_index in range(len(states_batch)):
         if rewards_batch[batch_index] > reward_threshold:
@@ -163,9 +164,16 @@ def select_elites(states_batch, actions_batch, rewards_batch): # TODO: typing an
     return elite_states, elite_actions
 
 
-def deep_cross_entropy_method(): # TODO: finish docstring
+def deep_cross_entropy_method(): 
     """
-    This is the main function
+    This is the main function.
+
+    We create, build and compile a three-layer neural network. 
+    
+    At each iteration we restart the environment and obtain the
+    resulting states, actions and rewards. From those values we
+    select the elite states and actions that will be used to train
+    our agent.
     """
     # We add three linear layers as well as their activation layers and a final output layer
     #   activated by the sigmoid function (so the final result takes values between 0 and 1)
@@ -180,7 +188,7 @@ def deep_cross_entropy_method(): # TODO: finish docstring
 
     model.compile(
         loss='binary_crossentropy', # Since we predict a binary outcome (whether the graph has a given edge or not)
-        optimizer=Adam(learning_rate = LEARNING_RATE) # Wagner uses SGD as an optimizer
+        optimizer=Adam(learning_rate=LEARNING_RATE) # Wagner uses SGD as an optimizer
     ) 
 
     for iter in range(N_ITERATIONS):
@@ -195,7 +203,8 @@ def deep_cross_entropy_method(): # TODO: finish docstring
         # We train the model with elite states and elite actions
         model.fit(elite_states, elite_actions)
 
-        total_rewards.sort()
+        total_rewards.sort() # NOTE: this is useless unless we print the total rewards somewhere
+
 
 if __name__ == '__main__':
     deep_cross_entropy_method()

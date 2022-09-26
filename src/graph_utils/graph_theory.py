@@ -14,7 +14,7 @@ def build_graph_at_given_state(
     """
     This function builds a graph from an array representing the state. 
     """
-    graph = nx.Graph() # TODO: add typing
+    graph = nx.Graph() 
     vertices_list: List[int] = list(range(n_vertices))
     graph.add_nodes_from(vertices_list)
 
@@ -45,7 +45,7 @@ def calculate_max_abs_val_eigenvalue(graph) -> float:
     that corresponds to a specific graph. It returns the largest
     eigenvalue in absolute value.
     """
-    adjacency_matrix = nx.adjacency_matrix(graph).todense() # TODO: typing
-    eigenvals: np.array = np.linalg.eigvalsh(adjacency_matrix) 
-    eigenvals_abs: np.array = abs(eigenvals)
+    adjacency_matrix = nx.adjacency_matrix(graph).todense() 
+    eigenvals = np.linalg.eigvalsh(adjacency_matrix) 
+    eigenvals_abs = abs(eigenvals)
     return max(eigenvals_abs)

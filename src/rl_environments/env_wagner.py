@@ -19,7 +19,7 @@ BATCH_SIZE = 1000 # Number of episodes in each iteration
 
 class EnvWagner():
     def __init__(self):
-        self.states =  np.zeros([BATCH_SIZE, SPACE, N_EDGES], dtype=int) # TODO: typing d'aquests multidimensional arrays
+        self.states =  np.zeros([BATCH_SIZE, SPACE, N_EDGES], dtype=int) 
         self.actions = np.zeros([BATCH_SIZE, N_EDGES], dtype = int)
         self.next_state = np.zeros([BATCH_SIZE, SPACE], dtype = int)
         # prob = np.zeros(BATCH_SIZE) --> I think this is redundant
