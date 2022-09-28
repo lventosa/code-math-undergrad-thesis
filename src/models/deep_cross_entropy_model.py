@@ -4,7 +4,9 @@ Model class for deep cross entropy
 
 from keras.layers import Dense
 from keras.models import Sequential
-from keras.optimizers import Adam
+
+# Wagner uses SGD as an optimizer. Adam converges faster but SGD generalizes better.
+from keras.optimizers import Adam, SGD 
 
 
 N_VERTICES = 19
@@ -28,7 +30,7 @@ class DeepCrossEntropyModel():
         self.model = Sequential()
 
         # We add three linear layers as well as their activation layers and a final output layer
-        #   activated by the sigmoid function (so the final result takes values between 0 and 1)
+        #   activated by the sigmoid function (so the final result takes values between 0 and 1).
         self.model.add(Dense(FIRST_LAYER_SIZE,  activation='relu'))
         self.model.add(Dense(SECOND_LAYER_SIZE, activation='relu'))
         self.model.add(Dense(THIRD_LAYER_SIZE, activation='relu'))
@@ -40,7 +42,7 @@ class DeepCrossEntropyModel():
 
         self.model.compile(
             loss='binary_crossentropy', # Since we predict a binary outcome (whether the graph has a given edge or not)
-            optimizer=Adam(learning_rate=LEARNING_RATE) # Wagner uses SGD as an optimizer
+            optimizer=SGD(learning_rate=LEARNING_RATE) 
         ) 
 
         return self.model
