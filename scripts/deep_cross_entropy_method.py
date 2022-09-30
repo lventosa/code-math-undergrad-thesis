@@ -7,21 +7,15 @@ His code can be found here: https://github.com/zawagner22/cross-entropy-for-comb
 """
 
 import logging
-import math
 import sys
 from typing import Tuple
 
 from keras.models import Sequential
-import networkx as nx
 import numpy as np
 
-from src.graph_theory_utils.graph_theory import (
-    build_graph_at_given_state,
-    calculate_matching_number,
-    calculate_max_abs_val_eigenvalue,
-)
+from src.graph_theory_utils.graph_theory import build_graph_at_given_state
 from src.models.deep_cross_entropy_model import DeepCrossEntropyModel
-from src.rl_environments.env_wagner import EnvWagner
+from src.rl_environments.env_wagner import EnvWagner, calculate_reward
 
 
 N_VERTICES = 19
@@ -42,11 +36,6 @@ LEARNING_RATE = 0.0001
 BATCH_SIZE = 1000 # Number of episodes in each iteration
 PERCENTILE = 93 # We will keep the first 93% episodes sorted by reward, those will be our elite
 
-# Number of neurons in each hidden layer (arbitrary)
-FIRST_LAYER_SIZE = 128 
-SECOND_LAYER_SIZE = 64
-THIRD_LAYER_SIZE = 4
-
 
 logging.basicConfig(
     stream=sys.stdout,
@@ -56,26 +45,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def calculate_reward(graph: nx.Graph) -> float:
-    """
-    This function calculates the reward for our reinforcement learning
-    problem. The reward depends on the conjecture we are trying to disprove. 
-
-    Since we want to minimize lambda1 + mu (our loss function), we return the
-    negative of this. Moreover, given that we want to disprove that 
-    lambda1 + mu >= sqrt(N-1) + 1, if we consider our reward function to be 
-    sqrt(N-1) + 1 - (lambda1 + mu) then it is enough to check whether the reward is 
-    positive. In such a case, we'll have found a counterexample for the conjecture.
-    """
-    # The conjecture assumes our graph is connected. We get rid of unconnected graphs
-    if not nx.is_connected(graph):
-        return -float('inf')   
-    else:
-        lambda1 = calculate_max_abs_val_eigenvalue(graph=graph)
-        mu = calculate_matching_number(graph=graph)
-        return math.sqrt(N_VERTICES-1) + 1 - (lambda1 + mu)
-
-
 def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.array, np.array]: 
     """
     Each time this function is called the environment is reset. That
@@ -83,13 +52,13 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.arr
     predicted probabilities.
     """
     logger.info('Resetting environment')
-    env = EnvWagner()
+    env = EnvWagner(batch_size=BATCH_SIZE)
 
-    env.states[:, 0] = 1 # Pintem el primer edge
+    env.states[:, N_EDGES, 0] = 1 # Pintem el primer edge
     current_edge = 0
 
     while True:
-        prob = agent.model.predict(env.states[:,:,current_edge-1], batch_size = BATCH_SIZE) 
+        prob = agent.model.predict(env.states[:,:,current_edge], batch_size = BATCH_SIZE) 
 
         for episode in range(BATCH_SIZE):
             if np.random.rand() < prob[episode]:
@@ -103,16 +72,19 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.arr
             env.next_state[episode] = env.states[episode,:,current_edge] 
 
             if action == 1: # We add that edge to the graph
-                env.next_state[episode][current_edge] = action	
+                env.next_state[episode][current_edge] = action
 
+            # We update the edge we are looking at	
+            env.next_state[episode][N_EDGES+current_edge] = 0
             if current_edge + 1 < N_EDGES:
+                env.next_state[episode][N_EDGES+current_edge+1] = 1
                 terminal = False
             else: 
                 terminal = True
 
             if terminal:
                 graph = build_graph_at_given_state(
-                    state=env.states[episode,:,current_edge], # TODO: make sure this is the correct state we should pass
+                    state=env.states[episode], 
                     n_vertices=N_VERTICES,
                 ) 
                 env.total_rewards[episode] = calculate_reward(graph=graph)
@@ -128,7 +100,7 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.arr
                     exit()
 
             if not terminal:
-                env.states[episode,:,current_edge + 1] = env.next_state[episode]	
+                env.states[episode,:,current_edge+1] = env.next_state[episode]	
 
         current_edge += 1
 
@@ -194,3 +166,6 @@ def deep_cross_entropy_method():
 
 if __name__ == '__main__':
     deep_cross_entropy_method()
+
+    # array_ te dim 3
+    #   array[0] = [num] 
