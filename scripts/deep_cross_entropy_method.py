@@ -1,7 +1,7 @@
 """
 Deep cross-entropy method to disprove a graph theory conjecture. 
 
-I am replicating A. Z. Wagner's work in the following paper: https://arxiv.org/abs/2104.14516
+I am replicating A. Z. Wagner's work in conjecture 2.1 from the following paper: https://arxiv.org/abs/2104.14516
 
 His code can be found here: https://github.com/zawagner22/cross-entropy-for-combinatorics
 """
@@ -15,7 +15,7 @@ from keras.models import Sequential
 import networkx as nx
 import numpy as np
 
-from src.graph_utils.graph_theory import (
+from src.graph_theory_utils.graph_theory import (
     build_graph_at_given_state,
     calculate_matching_number,
     calculate_max_abs_val_eigenvalue,
