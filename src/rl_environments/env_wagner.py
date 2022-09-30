@@ -16,10 +16,14 @@ from src.graph_theory_utils.graph_theory import (
 N_VERTICES = 19
 N_EDGES = int(N_VERTICES*(N_VERTICES-1)/2) # A graph of n vertices has at most n(n-1)/2 edges
 
+# At each state (pair of vertices) we only have two actions: to add an edge joining those two 
+#   vertices or to leave them unconnected (no edge)
+N_ACTIONS = 2 
+
 # The input vector will have size 2*N_EDGES, where the first N_EDGES letters encode our partial word (with zeros on
 #   the positions we haven't considered yet), and the next N_EDGES bits one-hot encode which letter we are considering now.
-#   For instance, [0,1,0,0,... ,0,0,1,0,...] means we have the partial word 01 and we are considering the third letter now.
-SPACE = 2*N_EDGES 
+#   For instance, [0,1,0,0,   0,0,1,0] means we have the partial word 01 and we are considering the third letter now.
+SPACE = N_ACTIONS*N_EDGES 
 
 
 class EnvWagner():
