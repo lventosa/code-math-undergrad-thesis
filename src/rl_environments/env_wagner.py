@@ -20,9 +20,10 @@ N_EDGES = int(N_VERTICES*(N_VERTICES-1)/2) # A graph of n vertices has at most n
 #   vertices or to leave them unconnected (no edge)
 N_ACTIONS = 2 
 
-# The input vector will have size 2*N_EDGES, where the first N_EDGES letters encode our partial word (with zeros on
-#   the positions we haven't considered yet), and the next N_EDGES bits one-hot encode which letter we are considering now.
-#   For instance, [0,1,0,0,   0,0,1,0] means we have the partial word 01 and we are considering the third letter now.
+# The input vector will have size 2*N_EDGES, where the first N_EDGES letters encode our partial word 
+#   (with zeros on the positions the agent has rejected or hasn't considered yet), and the next N_EDGES 
+#   bits one-hot encode which letter we are considering now. For instance, [0,1,0,0,   0,0,1,0] means we 
+#   have the partial word 01 and we are considering the third letter now.
 SPACE = N_ACTIONS*N_EDGES 
 
 
@@ -32,6 +33,7 @@ class EnvWagner():
         self.actions = np.zeros([batch_size, N_EDGES], dtype = int)
         self.next_state = np.zeros([batch_size, SPACE], dtype = int)
         self.total_rewards = np.zeros([batch_size])
+
 
 
 def calculate_reward(graph: nx.Graph) -> float:
