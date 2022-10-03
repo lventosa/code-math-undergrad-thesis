@@ -27,7 +27,7 @@ N_ACTIONS = 2
 SPACE = N_ACTIONS*N_EDGES 
 
 
-class EnvWagner():
+class EnvWagnerCrossEntropy():
     def __init__(self, batch_size: int):
         self.states =  np.zeros([batch_size, SPACE, N_EDGES], dtype=int) 
         self.actions = np.zeros([batch_size, N_EDGES], dtype = int)
@@ -35,6 +35,10 @@ class EnvWagner():
         self.total_rewards = np.zeros([batch_size])
 
 
+class EnvWagnerQLearning():
+    def __init__(self):
+        self.states = np.asarray([num for num in range(N_EDGES)])
+        self.actions = [0, 1]
 
 def calculate_reward(graph: nx.Graph) -> float:
     """
