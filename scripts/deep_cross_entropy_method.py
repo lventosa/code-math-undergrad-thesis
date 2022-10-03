@@ -55,7 +55,8 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.arr
 
             env.actions[episode][current_edge] = action
 
-            # We equate next state and current state for the current edge and will adjust next state depending on the action
+            # We equate next state and current state for the current edge 
+            #   and will adjust next state depending on the action
             env.next_state[episode] = env.states[episode,:,current_edge] 
 
             if action == 1: # We add that edge to the graph
@@ -80,7 +81,7 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.arr
                     logger.info('A counterexample has been found!')
 
                     # We write the graph into a text file and exit the program
-                    file = open('counterexample_crossentropy.txt', 'w+')
+                    file = open('counterexample_cross_entropy.txt', 'w+')
                     content = str(env.states[episode,:,current_edge])
                     file.write(content)
                     file.close()
