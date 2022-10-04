@@ -6,7 +6,6 @@ I'm trying to disprove conjecture 2.1 from the following paper: https://arxiv.or
 
 import logging 
 import sys
-from typing import List
 
 import numpy as np
 
@@ -55,7 +54,7 @@ def value_update(
 
 def tabular_q_learning(): # TODO: no syntax erros but behavior is not as expected
     """
-    This is the main function.
+    This is the main function for Tabular Q-Learning.
     """
     env = EnvWagnerQLearning() 
     env.initialize_q_table()
@@ -80,11 +79,20 @@ def tabular_q_learning(): # TODO: no syntax erros but behavior is not as expecte
                 log.info('A counterexample has been found!')
 
                 # We write the graph into a text file and exit the program
-                file = open('counterexample_cross_entropy.txt', 'w+')
-                content = str(env.q_table) # TODO: determine what it make smore sense to write
+                file = open('counterexample_tabular_q_learning.txt', 'w+')
+                content = str(env.q_table) # TODO: determine what it makes more sense to write
                 file.write(content)
                 file.close()
                 exit()
+
+
+def deep_q_learning(): # TODO: finish this function
+    """
+    This is the main function for Deep Q-Learning.
+    """
+
+    env = EnvWagnerQLearning
+    env.initialize_q_table()
 
 
 if __name__ == '__main__':
