@@ -8,8 +8,8 @@ import networkx as nx
 import numpy as np
 
 
-def build_graph_at_given_state(
-    state: np.array, n_vertices: int
+def build_graph_from_array(
+    array: np.array, n_vertices: int
 ) -> nx.Graph: 
     """
     This function builds a graph from an array representing the state. 
@@ -18,13 +18,13 @@ def build_graph_at_given_state(
     vertices_list: List[int] = list(range(n_vertices))
     graph.add_nodes_from(vertices_list)
 
-    state_index: int = 0
+    index: int = 0
 
     for i in range(0, n_vertices):
         for j in range(i+1, n_vertices):
-            if state[state_index] == 1:
+            if array[index] == 1:
                 graph.add_edge(i,j)
-            state_index += 1
+            index += 1
 
     return graph
 

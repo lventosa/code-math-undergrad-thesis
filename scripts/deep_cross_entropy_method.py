@@ -72,7 +72,7 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.arr
 
             if terminal:
                 graph = build_graph_at_given_state(
-                    state=env.states[episode], 
+                    array=env.states[episode], 
                     n_vertices=N_VERTICES,
                 ) 
                 env.total_rewards[episode] = calculate_reward(graph=graph)
