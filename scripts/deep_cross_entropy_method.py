@@ -13,7 +13,7 @@ from typing import Tuple
 from keras.models import Sequential
 import numpy as np
 
-from src.graph_theory_utils.graph_theory import build_graph_at_given_state
+from src.graph_theory_utils.graph_theory import build_graph_from_array
 from src.models.deep_cross_entropy_model import DeepCrossEntropyModel
 from src.rl_environments.env_wagner import EnvWagnerCrossEntropy, calculate_reward, N_VERTICES, N_EDGES
 
@@ -71,7 +71,7 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.arr
                 terminal = True
 
             if terminal:
-                graph = build_graph_at_given_state(
+                graph = build_graph_from_array(
                     array=env.states[episode], 
                     n_vertices=N_VERTICES,
                 ) 
