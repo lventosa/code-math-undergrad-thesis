@@ -29,7 +29,7 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M',
     format='%(asctime)s | %(message)s'
 )
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.array, np.array]: 
@@ -38,7 +38,7 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.arr
     is, we restart the states and actions for the agent as well as the
     predicted probabilities.
     """
-    logger.info('Resetting environment')
+    log.info('Resetting environment')
     env = EnvWagnerCrossEntropy(batch_size=BATCH_SIZE)
 
     env.states[:, N_EDGES, 0] = 1 # Pintem el primer edge
@@ -78,7 +78,7 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.arr
                 env.total_rewards[episode] = calculate_reward(graph=graph)
 
                 if env.total_rewards[episode] > 0: 
-                    logger.info('A counterexample has been found!')
+                    log.info('A counterexample has been found!')
 
                     # We write the graph into a text file and exit the program
                     file = open('counterexample_cross_entropy.txt', 'w+')
