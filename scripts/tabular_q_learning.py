@@ -28,22 +28,9 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 
-
-def best_value_and_action(
-    actions: List[int], state: int, q_table: np.array
-):
-    best_value = None
-    for action in actions:
-        action_value = q_table[state][action]
-        if best_value is None or best_value < action_value:
-            best_value = action_value
-            best_action = action
-    return best_value, best_action
-
-
 def value_update(
-    env: EnvWagnerQLearning, state: int, action: int, 
-    reward: float, next_state: int,
+    env: EnvWagnerQLearning, state: int, 
+    next_state: int, reward: float, 
 ) -> np.array:
     """
     This function allows us to update the Q-value using 
@@ -55,41 +42,50 @@ def value_update(
     rate determines how much we change the current Q-value towards
     the discounted maximum of existing values.
     """
-    best_value, best_action = best_value_and_action(env=env, state=next_state)
+    best_value = None
+    for action in env.actions:
+        action_value = env.q_table[next_state][action] 
+        if best_value is None or best_value < action_value:
+            best_value = action_value
+            best_action = action
+
     new_value = reward + GAMMA*best_value
-    env.q_table[state][action] = (1-ALPHA)*env.q_table[state][action] + ALPHA*new_value
+    env.q_table[state][best_action] = (1-ALPHA)*env.q_table[state][best_action] + ALPHA*new_value
 
 
-
-def tabular_q_learning(): # TODO: finish this function
+def tabular_q_learning(): # TODO: no syntax erros but behavior is not as expected
     """
     This is the main function.
-
-    In tabular Q-learning, we go through ALL states and actions
-    of an environment.
     """
     env = EnvWagnerQLearning() 
     env.initialize_q_table()
 
     for state in env.states:
-        for action in env.actions:
             graph = build_graph_from_array( 
                 array=env.states, 
                 n_vertices=N_VERTICES,
             )
             reward = calculate_reward(graph=graph)
-            
-            value_update(
-                env=env, state=state, action=action,
-                reward=reward, next_state=state+1,
-            )
 
+            if reward <= 0: 
+                if reward == -float('inf'):
+                    continue
+                else:
+                    value_update(
+                        env=env, state=state, 
+                        reward=reward, 
+                        next_state=state+1,
+                    )
+            else: 
+                log.info('A counterexample has been found!')
 
+                # We write the graph into a text file and exit the program
+                file = open('counterexample_cross_entropy.txt', 'w+')
+                content = str(env.q_table) # TODO: determine what it make smore sense to write
+                file.write(content)
+                file.close()
+                exit()
 
-
-    
-
-    
 
 if __name__ == '__main__':
     tabular_q_learning()
