@@ -39,6 +39,16 @@ class EnvWagnerQLearning():
     def __init__(self):
         self.states = np.asarray([num for num in range(N_EDGES)])
         self.actions = [0, 1]
+        
+    def initialize_q_table(self):
+        """
+        This function initializes the Q-table. Its dimension
+        is equal to the number of states.
+        """
+        # The number of simple graphs of n vertices is 2^{n(n-1)/2}, where {n(n-1)/2} is 
+        #   what we call N_EDGES. That is, we have 2^N_EDGES possible states and N_ACTIONS = 2.
+        self.q_table = np.zeros([N_EDGES, N_ACTIONS])
+
 
 def calculate_reward(graph: nx.Graph) -> float:
     """
