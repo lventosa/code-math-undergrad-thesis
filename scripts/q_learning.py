@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 def value_update(
     env: EnvWagnerQLearning, state: int, 
     next_state: int, reward: float, 
-) -> np.array:
+) -> np.ndarray:
     """
     This function allows us to update the Q-value using 
     the Bellman approximation. We are updating Q(s,a) using
@@ -52,38 +52,50 @@ def value_update(
     env.q_table[state][best_action] = (1-ALPHA)*env.q_table[state][best_action] + ALPHA*new_value
 
 
-def tabular_q_learning(): # TODO: no syntax erros but behavior is not as expected
+# TODO: no syntax errors but behavior is not as expected. Check if the graph is built correctly, 
+#   I think it's weird to get always unconnected graphs.
+def tabular_q_learning(): 
     """
     This is the main function for Tabular Q-Learning.
     """
     env = EnvWagnerQLearning() 
     env.initialize_q_table()
 
-    for state in env.states:
-            graph = build_graph_from_array( 
-                array=env.states, 
-                n_vertices=N_VERTICES,
-            )
-            reward = calculate_reward(graph=graph)
+    iter = 0
 
-            if reward <= 0: 
-                if reward == -float('inf'):
-                    continue
-                else:
-                    value_update(
-                        env=env, state=state, 
-                        reward=reward, 
-                        next_state=state+1,
-                    )
-            else: 
-                log.info('A counterexample has been found!')
+    while True: 
+        iter += 1
+        for state in env.states:
+                graph = build_graph_from_array( 
+                    array=env.states, 
+                    n_vertices=N_VERTICES,
+                )
+                reward = calculate_reward(graph=graph)
 
-                # We write the graph into a text file and exit the program
-                file = open('counterexample_tabular_q_learning.txt', 'w+')
-                content = str(env.q_table) # TODO: determine what it makes more sense to write
-                file.write(content)
-                file.close()
-                exit()
+                if reward <= 0: 
+                    if reward == -float('inf'):
+                        continue
+                    else:
+                        if state >= len(env.q_table)-1:
+                            state = -1 
+
+                        value_update(
+                            env=env, state=state, 
+                            reward=reward, 
+                            next_state=state+1,
+                        )
+                            
+                else: 
+                    log.info('A counterexample has been found!')
+
+                    # We write the graph into a text file and exit the program
+                    file = open('counterexample_tabular_q_learning.txt', 'w+')
+                    content = str(env.q_table) # TODO: determine what it makes more sense to write
+                    file.write(content)
+                    file.close()
+                    exit()
+
+        print('Iteration through states done')
 
 
 def deep_q_learning(): # TODO: finish this function

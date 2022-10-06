@@ -9,7 +9,7 @@ import numpy as np
 
 
 def build_graph_from_array(
-    array: np.array, n_vertices: int
+    array: np.ndarray, n_vertices: int
 ) -> nx.Graph: 
     """
     This function builds a graph from an array representing the state. 

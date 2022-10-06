@@ -32,7 +32,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 
-def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.array, np.array]: 
+def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.ndarray, np.ndarray, np.ndarray]: 
     """
     Each time this function is called the environment is reset. That
     is, we restart the states and actions for the agent as well as the
@@ -99,8 +99,8 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.array, np.arr
 
 
 def select_elites(
-    states_batch: np.array, actions_batch: np.array, rewards_batch: np.array,
-) -> Tuple[np.array, np.array, np.array]:
+    states_batch: np.ndarray, actions_batch: np.ndarray, rewards_batch: np.ndarray,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     This function selects the top states and actions given 
     the threshold set by an arbitrary percentage.
@@ -117,8 +117,8 @@ def select_elites(
             for item in actions_batch[batch_index]:
                 elite_actions.append(item)
 
-    elite_states = np.array(elite_states, dtype = int)	
-    elite_actions = np.array(elite_actions, dtype = int)
+    elite_states = np.ndarray(elite_states, dtype = int)	
+    elite_actions = np.ndarray(elite_actions, dtype = int)
 
     return elite_states, elite_actions
 

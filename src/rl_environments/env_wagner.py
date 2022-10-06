@@ -63,7 +63,8 @@ def calculate_reward(graph: nx.Graph) -> float:
     """
     # The conjecture assumes our graph is connected. We get rid of unconnected graphs
     if not nx.is_connected(graph):
-        return -float('inf')   
+        # return -float('inf')   
+        return -100000000 # TODO: change back to -inf for deep cross entropy
     else:
         lambda1 = calculate_max_abs_val_eigenvalue(graph=graph)
         mu = calculate_matching_number(graph=graph)
