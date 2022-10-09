@@ -29,7 +29,7 @@ def build_graph_from_array(
     return graph
 
 
-def calculate_matching_number(graph) -> int: 
+def calculate_matching_number(graph: nx.Graph) -> int: 
     """
     This function calculates all matchings for a given graph and
     it returns the matching number (i.e. the length of the maximum
@@ -39,7 +39,7 @@ def calculate_matching_number(graph) -> int:
     return len(max_matching)
 
 
-def calculate_max_abs_val_eigenvalue(graph) -> float:
+def calculate_max_abs_val_eigenvalue(graph: nx.Graph) -> float:
     """
     This function computes the eigenvalues of the adjacency matrix
     that corresponds to a specific graph. It returns the largest
