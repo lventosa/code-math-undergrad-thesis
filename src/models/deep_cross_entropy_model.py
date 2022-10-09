@@ -4,7 +4,7 @@ Model class for deep cross entropy
 
 from keras.layers import Dense
 from keras.models import Sequential
-from keras.optimizers import SGD 
+from keras.optimizers import SGD, Adam
 
 from src.rl_environments.env_wagner import SPACE
 
@@ -28,13 +28,21 @@ class DeepCrossEntropyModel():
         self.model.add(Dense(THIRD_LAYER_SIZE, activation='relu'))
         self.model.add(Dense(1, activation='sigmoid'))
 
-    def build_and_compile_model(self):
+    def build_and_compile_model(self, method: str):
         # We build the model based on input shapes received
         self.model.build((None, SPACE)) 
 
-        self.model.compile(
-            loss='binary_crossentropy', # Since we predict a binary outcome 
-            optimizer=SGD(learning_rate=LEARNING_RATE) 
-        ) 
+        if method == 'cross_entropy':
+            self.model.compile(
+                loss='binary_crossentropy', # Since we predict a binary outcome 
+                optimizer=SGD(learning_rate=LEARNING_RATE), 
+            ) 
+
+        if method == 'q_learning':
+            self.model.compile(
+                loss='binary_crossentropy', 
+                optimizer=Adam(learning_rate=LEARNING_RATE), 
+            ) 
 
         return self.model
+        

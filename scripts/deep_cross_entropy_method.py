@@ -75,7 +75,9 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.ndarray, np.n
                     array=env.states[episode], 
                     n_vertices=N_VERTICES,
                 ) 
-                env.total_rewards[episode] = calculate_reward(graph=graph)
+                env.total_rewards[episode] = calculate_reward(
+                    graph=graph, method='cross_entropy',
+                )
 
                 if env.total_rewards[episode] > 0: 
                     log.info('A counterexample has been found!')
@@ -135,7 +137,7 @@ def deep_cross_entropy_method():
     our agent.
     """
     model = DeepCrossEntropyModel()
-    model.build_and_compile_model()
+    model.build_and_compile_model(method='cross_entropy')
 
     for iter in range(N_ITERATIONS):
         states, actions, total_rewards = restart_environment_and_iterate(agent=model)
