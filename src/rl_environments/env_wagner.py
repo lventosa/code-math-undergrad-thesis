@@ -30,15 +30,16 @@ SPACE = N_ACTIONS*N_EDGES
 class EnvWagnerCrossEntropy():
     def __init__(self, batch_size: int):
         self.states =  np.zeros([batch_size, SPACE, N_EDGES], dtype=int) 
-        self.actions = np.zeros([batch_size, N_EDGES], dtype = int)
-        self.next_state = np.zeros([batch_size, SPACE], dtype = int)
-        self.total_rewards = np.zeros([batch_size])
+        self.actions = np.zeros([batch_size, N_EDGES], dtype=int)
+        self.next_state = np.zeros([batch_size, SPACE], dtype=int)
+        self.total_rewards = np.zeros([batch_size], dtype=float)
 
 
 class EnvWagnerQLearning():
     def __init__(self):
         self.states = np.asarray([num for num in range(N_EDGES)])
         self.actions = [0, 1]
+        self.graph_current_state = np.zeros(N_EDGES, dtype=int) # N_EDGES or [N_EDGES]???
         
     def initialize_q_table(self):
         """
@@ -50,7 +51,9 @@ class EnvWagnerQLearning():
         self.q_table = np.zeros([N_EDGES, N_ACTIONS])
 
 
-def calculate_reward(graph: nx.Graph) -> float:
+def calculate_reward(
+    graph: nx.Graph, method: str, 
+) -> float:
     """
     This function calculates the reward for our reinforcement learning
     problem. The reward depends on the conjecture we are trying to disprove. 
@@ -61,11 +64,16 @@ def calculate_reward(graph: nx.Graph) -> float:
     sqrt(N-1) + 1 - (lambda1 + mu) then it is enough to check whether the reward is 
     positive. In such a case, we'll have found a counterexample for the conjecture.
     """
-    # The conjecture assumes our graph is connected. We get rid of unconnected graphs
-    if not nx.is_connected(graph):
-        # return -float('inf')   
-        return -100000000 # TODO: change back to -inf for deep cross entropy
-    else:
+    if method == 'cross_entropy':
+        # The conjecture assumes our graph is connected. We get rid of unconnected graphs
+        if not nx.is_connected(graph):
+            return -float('inf')
+        else:  
+            lambda1 = calculate_max_abs_val_eigenvalue(graph=graph)
+            mu = calculate_matching_number(graph=graph)
+            return math.sqrt(N_VERTICES-1) + 1 - (lambda1 + mu)  
+
+    if method == 'q_learning':
         lambda1 = calculate_max_abs_val_eigenvalue(graph=graph)
         mu = calculate_matching_number(graph=graph)
         return math.sqrt(N_VERTICES-1) + 1 - (lambda1 + mu)
