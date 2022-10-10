@@ -32,14 +32,14 @@ class EnvWagnerCrossEntropy():
         self.states =  np.zeros([batch_size, SPACE, N_EDGES], dtype=int) 
         self.actions = np.zeros([batch_size, N_EDGES], dtype=int)
         self.next_state = np.zeros([batch_size, SPACE], dtype=int)
-        self.total_rewards = np.zeros([batch_size], dtype=float)
+        self.total_rewards = np.zeros(batch_size, dtype=float)
 
 
 class EnvWagnerQLearning():
     def __init__(self):
         self.states = np.asarray([num for num in range(N_EDGES)])
         self.actions = [0, 1]
-        self.graph_current_state = np.zeros(N_EDGES, dtype=int) # N_EDGES or [N_EDGES]???
+        self.graph_current_state = np.zeros(N_EDGES, dtype=int) 
         
     def initialize_q_table(self):
         """
@@ -48,7 +48,8 @@ class EnvWagnerQLearning():
         """
         # The number of simple graphs of n vertices is 2^{n(n-1)/2}, where {n(n-1)/2} is 
         #   what we call N_EDGES. That is, we have 2^N_EDGES possible states and N_ACTIONS = 2.
-        self.q_table = np.zeros([N_EDGES, N_ACTIONS])
+        self.q_table = np.random.randint(0, 10, size=(N_EDGES, N_ACTIONS))
+        self.q_table = self.q_table.astype(np.float)
 
 
 def calculate_reward(
