@@ -137,7 +137,7 @@ def deep_cross_entropy_method():
     our agent.
     """
     model = DeepCrossEntropyModel()
-    model.build_and_compile_model(method='cross_entropy')
+    model.build_and_compile_model()
 
     for iter in range(N_ITERATIONS):
         states, actions, total_rewards = restart_environment_and_iterate(agent=model)

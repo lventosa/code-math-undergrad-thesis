@@ -31,18 +31,9 @@ class DeepCrossEntropyModel():
     def build_and_compile_model(self, method: str):
         # We build the model based on input shapes received
         self.model.build((None, SPACE)) 
-
-        if method == 'cross_entropy':
-            self.model.compile(
-                loss='binary_crossentropy', # Since we predict a binary outcome 
-                optimizer=SGD(learning_rate=LEARNING_RATE), 
-            ) 
-
-        if method == 'q_learning':
-            self.model.compile(
-                loss='binary_crossentropy', 
-                optimizer=Adam(learning_rate=LEARNING_RATE), 
-            ) 
-
+        self.model.compile(
+            loss='binary_crossentropy', # Since we predict a binary outcome 
+            optimizer=SGD(learning_rate=LEARNING_RATE), 
+        ) 
         return self.model
         
