@@ -6,8 +6,9 @@ I'm trying to disprove conjecture 2.1 from the following paper: https://arxiv.or
 
 import logging 
 import sys
+from typing import Tuple
 
-import numpy as np
+import networkx as nx
 
 from src.graph_theory_utils.graph_theory import build_graph_from_array
 from src.rl_environments.env_wagner import (
@@ -28,9 +29,8 @@ log = logging.getLogger(__name__)
 
 
 def value_update(
-    env: EnvWagnerQLearning, state: int, 
-    next_state: int, reward: float, 
-) -> np.ndarray:
+    env: EnvWagnerQLearning, state: int, next_state: int,
+) -> Tuple[nx.Graph, float]:
     """
     This function allows us to update the Q-value using 
     the Bellman approximation. We are updating Q(s,a) using
@@ -48,12 +48,20 @@ def value_update(
             best_value = action_value
             best_action = action
 
+    env.graph_current_state[state] = best_action
+
+    graph_best_action = build_graph_from_array( 
+        array=env.graph_current_state, 
+        n_vertices=N_VERTICES,
+    )
+    reward = calculate_reward(graph=graph_best_action, method='q_learning')                        
+
     new_value = reward + GAMMA*best_value
     env.q_table[state][best_action] = (1-ALPHA)*env.q_table[state][best_action] + ALPHA*new_value
 
+    return graph_best_action, reward
 
-# TODO: no syntax errors but behavior is not as expected. Check if the graph is built correctly, 
-#   I think it's weird to get always unconnected graphs.
+
 def tabular_q_learning(): 
     """
     This is the main function for Tabular Q-Learning.
@@ -66,26 +74,16 @@ def tabular_q_learning():
     while True: 
         iter += 1
         for state in env.states:
-                graph = build_graph_from_array( 
-                    array=env.states, 
-                    n_vertices=N_VERTICES,
-                )
-                reward = calculate_reward(graph=graph)
+            if state >= len(env.q_table)-1:
+                state = -1 
 
-                if reward <= 0: 
-                    if reward == -float('inf'):
-                        continue
-                    else:
-                        if state >= len(env.q_table)-1:
-                            state = -1 
+            graph_best_action, reward = value_update(
+                env=env, state=state, 
+                next_state=state+1,
+            )
 
-                        value_update(
-                            env=env, state=state, 
-                            reward=reward, 
-                            next_state=state+1,
-                        )
-                            
-                else: 
+            if reward >= 0: 
+                if nx.is_connected(graph_best_action):
                     log.info('A counterexample has been found!')
 
                     # We write the graph into a text file and exit the program
@@ -95,16 +93,12 @@ def tabular_q_learning():
                     file.close()
                     exit()
 
-        print('Iteration through states done')
+                else:
+                    log.info(
+                        'The graph that has been found is not connected --> invalid counterexample'
+                    )
 
-
-def deep_q_learning(): # TODO: finish this function
-    """
-    This is the main function for Deep Q-Learning.
-    """
-
-    env = EnvWagnerQLearning
-    env.initialize_q_table()
+        print(f'Iteration #{iter} done')
 
 
 if __name__ == '__main__':
