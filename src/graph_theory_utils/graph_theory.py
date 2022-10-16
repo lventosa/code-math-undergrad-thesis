@@ -9,7 +9,7 @@ import numpy as np
 
 
 def build_graph_from_array(
-    array: np.ndarray, n_vertices: int
+    array: np.ndarray, n_vertices: int,
 ) -> nx.Graph: 
     """
     This function builds a graph from an array representing the state. 
@@ -49,3 +49,13 @@ def calculate_max_abs_val_eigenvalue(graph: nx.Graph) -> float:
     eigenvals = np.linalg.eigvalsh(adjacency_matrix) 
     eigenvals_abs = abs(eigenvals)
     return max(eigenvals_abs)
+
+
+def calculate_laplacian_eigenvalues(graph: nx.Graph) -> List[float]:
+    """
+    This function computes the eigenvalues of the laplacian
+    matrix that corresponds to a specific graph.
+    """
+    laplacian_matrix = nx.laplacian_matrix(graph).todense()
+    eigenvals = np.linalg.eigvalsh(laplacian_matrix) # TODO make sure this type corresponds to List[float]
+    return eigenvals

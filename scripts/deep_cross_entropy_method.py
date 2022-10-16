@@ -15,7 +15,8 @@ import numpy as np
 
 from src.graph_theory_utils.graph_theory import build_graph_from_array
 from src.models.deep_cross_entropy_model import DeepCrossEntropyModel
-from src.rl_environments.env_wagner import EnvWagnerCrossEntropy, calculate_reward, N_VERTICES, N_EDGES
+from src.rl_environments.environments import EnvCrossEntropy, N_VERTICES, N_EDGES
+from src.rl_environments.reward_functions import calculate_reward_wagner
 
 
 # The following values are set arbitrarily and can be modified for experimental purposes
@@ -39,7 +40,7 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.ndarray, np.n
     predicted probabilities.
     """
     log.info('Resetting environment')
-    env = EnvWagnerCrossEntropy(batch_size=BATCH_SIZE)
+    env = EnvCrossEntropy(batch_size=BATCH_SIZE)
 
     env.states[:, N_EDGES, 0] = 1 # Pintem el primer edge
     current_edge = 0
@@ -75,7 +76,7 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.ndarray, np.n
                     array=env.states[episode], 
                     n_vertices=N_VERTICES,
                 ) 
-                env.total_rewards[episode] = calculate_reward(
+                env.total_rewards[episode] = calculate_reward_wagner(
                     graph=graph, method='cross_entropy',
                 )
 

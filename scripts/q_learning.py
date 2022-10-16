@@ -11,9 +11,8 @@ from typing import Tuple
 import networkx as nx
 
 from src.graph_theory_utils.graph_theory import build_graph_from_array
-from src.rl_environments.env_wagner import (
-    calculate_reward, EnvWagnerQLearning, N_VERTICES,
-)
+from src.rl_environments.environments import EnvQLearning, N_VERTICES
+from src.rl_environments.reward_functions import calculate_reward_wagner
 
 
 GAMMA = 0.9 # Discount rate
@@ -29,7 +28,7 @@ log = logging.getLogger(__name__)
 
 
 def value_update(
-    env: EnvWagnerQLearning, state: int, next_state: int,
+    env: EnvQLearning, state: int, next_state: int,
 ) -> Tuple[nx.Graph, float]:
     """
     This function allows us to update the Q-value using 
@@ -54,7 +53,7 @@ def value_update(
         array=env.graph_current_state, 
         n_vertices=N_VERTICES,
     )
-    reward = calculate_reward(graph=graph_best_action, method='q_learning')                        
+    reward = calculate_reward_wagner(graph=graph_best_action, method='q_learning')                        
 
     new_value = reward + GAMMA*best_value
     env.q_table[state][best_action] = (1-ALPHA)*env.q_table[state][best_action] + ALPHA*new_value
@@ -66,7 +65,7 @@ def tabular_q_learning():
     """
     This is the main function for Tabular Q-Learning.
     """
-    env = EnvWagnerQLearning() 
+    env = EnvQLearning() 
     env.initialize_q_table()
 
     iter = 0

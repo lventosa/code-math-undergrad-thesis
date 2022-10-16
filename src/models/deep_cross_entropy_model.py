@@ -4,9 +4,9 @@ Model class for deep cross entropy
 
 from keras.layers import Dense
 from keras.models import Sequential
-from keras.optimizers import SGD, Adam
+from keras.optimizers import SGD
 
-from src.rl_environments.env_wagner import SPACE
+from src.rl_environments.environments import SPACE
 
 
 LEARNING_RATE = 0.0001 

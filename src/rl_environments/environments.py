@@ -1,19 +1,10 @@
 """
 Class representing the environment in which our RL agent will be
-living when looking for a counterexample to Wagner's conjecture.
-
-There's also the function to calculate the reward since it depends
-on the conjecture we're trying to disprove.
+living when looking for a counterexample to Wagner's conjecture
+as well as Brouwer's.
 """
 
-import math
 import numpy as np
-import networkx as nx
-
-from src.graph_theory_utils.graph_theory import (
-    calculate_matching_number,
-    calculate_max_abs_val_eigenvalue,
-)
 
 
 N_VERTICES = 19
@@ -30,7 +21,7 @@ N_ACTIONS = 2
 SPACE = N_ACTIONS*N_EDGES 
 
 
-class EnvWagnerCrossEntropy():
+class EnvCrossEntropy():
     def __init__(self, batch_size: int):
         self.states =  np.zeros([batch_size, SPACE, N_EDGES], dtype=int) 
         self.actions = np.zeros([batch_size, N_EDGES], dtype=int)
@@ -38,7 +29,7 @@ class EnvWagnerCrossEntropy():
         self.total_rewards = np.zeros(batch_size, dtype=float)
 
 
-class EnvWagnerQLearning():
+class EnvQLearning():
     def __init__(self):
         self.states = np.asarray([num for num in range(N_EDGES)])
         self.actions = [0, 1]
@@ -53,31 +44,3 @@ class EnvWagnerQLearning():
         #   what we call N_EDGES. That is, we have 2^N_EDGES possible states and N_ACTIONS = 2.
         self.q_table = np.random.randint(0, 10, size=(N_EDGES, N_ACTIONS))
         self.q_table = self.q_table.astype(np.float)
-
-
-def calculate_reward(
-    graph: nx.Graph, method: str, 
-) -> float:
-    """
-    This function calculates the reward for our reinforcement learning
-    problem. The reward depends on the conjecture we are trying to disprove. 
-
-    Since we want to minimize lambda1 + mu (our loss function), we return the
-    negative of this. Moreover, given that we want to disprove that 
-    lambda1 + mu >= sqrt(N-1) + 1, if we consider our reward function to be 
-    sqrt(N-1) + 1 - (lambda1 + mu) then it is enough to check whether the reward is 
-    positive. In such a case, we'll have found a counterexample for the conjecture.
-    """
-    if method == 'cross_entropy':
-        # The conjecture assumes our graph is connected. We get rid of unconnected graphs
-        if not nx.is_connected(graph):
-            return -float('inf')
-        else:  
-            lambda1 = calculate_max_abs_val_eigenvalue(graph=graph)
-            mu = calculate_matching_number(graph=graph)
-            return math.sqrt(N_VERTICES-1) + 1 - (lambda1 + mu)  
-
-    if method == 'q_learning':
-        lambda1 = calculate_max_abs_val_eigenvalue(graph=graph)
-        mu = calculate_matching_number(graph=graph)
-        return math.sqrt(N_VERTICES-1) + 1 - (lambda1 + mu)
