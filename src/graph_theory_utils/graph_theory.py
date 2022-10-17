@@ -2,10 +2,20 @@
 Script with all functions necessary to work with graphs.
 """
 
+import logging
+import sys
 from typing import List
 
 import networkx as nx
 import numpy as np
+
+
+logging.basicConfig(
+    stream=sys.stdout,
+    datefmt='%Y-%m-%d %H:%M',
+    format='%(asctime)s | %(message)s'
+)
+log = logging.getLogger(__name__)
 
 
 def build_graph_from_array(
@@ -59,3 +69,20 @@ def calculate_laplacian_eigenvalues(graph: nx.Graph) -> List[float]:
     laplacian_matrix = nx.laplacian_matrix(graph).todense()
     eigenvals = np.linalg.eigvalsh(laplacian_matrix) # TODO make sure this type corresponds to List[float]
     return eigenvals
+
+
+def print_counterexample_to_file(
+    method: str, counterexample: np.ndarray,
+) -> None:
+    """
+    This function prints the graph that has been identified as a
+    counterexample into a .txt file in the output/ directory.
+    """
+    log.info('A counterexample has been found!')
+
+    # We write the graph into a text file and exit the program
+    file = open(f'../output/{method}/counterexample.txt', 'w+') # TODO: make sure this path is correct
+    content = str(counterexample)
+    file.write(content)
+    file.close()
+    exit()
