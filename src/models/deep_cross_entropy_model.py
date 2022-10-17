@@ -1,5 +1,5 @@
 """
-Model class for deep cross entropy
+Model class for the deep cross entropy method.
 """
 
 from keras.layers import Dense

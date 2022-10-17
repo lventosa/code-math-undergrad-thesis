@@ -1,9 +1,11 @@
 """
 Deep cross-entropy method to disprove a graph theory conjecture. 
 
-I am replicating A. Z. Wagner's work in conjecture 2.1 from the following paper: https://arxiv.org/abs/2104.14516
+I am replicating A. Z. Wagner's work in conjecture 2.1 from the following paper: 
+https://arxiv.org/abs/2104.14516
 
-His code can be found here: https://github.com/zawagner22/cross-entropy-for-combinatorics
+His code can be found here: 
+https://github.com/zawagner22/cross-entropy-for-combinatorics
 """
 
 import logging
