@@ -36,3 +36,4 @@ instances:
 scripts:
   main: |
     python scripts/deep_cross_entropy_method.py
+    python scripts/q_learning.py
