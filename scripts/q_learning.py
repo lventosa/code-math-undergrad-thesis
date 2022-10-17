@@ -11,9 +11,15 @@ from typing import Tuple
 
 import networkx as nx
 
-from src.graph_theory_utils.graph_theory import build_graph_from_array
+from src.graph_theory_utils.graph_theory import (
+    build_graph_from_array, 
+    print_counterexample_to_file,
+)
 from src.rl_environments.environments import EnvQLearning, N_VERTICES
-from src.rl_environments.reward_functions import calculate_reward_wagner
+from src.rl_environments.reward_functions import (
+    calculate_reward_brouwer, 
+    calculate_reward_wagner,
+)
 
 
 GAMMA = 0.9 # Discount rate
@@ -29,8 +35,9 @@ log = logging.getLogger(__name__)
 
 
 def value_update(
-    env: EnvQLearning, state: int, next_state: int,
-) -> Tuple[nx.Graph, float]:
+    env: EnvQLearning, state: int, 
+    next_state: int, conjecture: str,
+) -> None:
     """
     This function allows us to update the Q-value using 
     the Bellman approximation. We are updating Q(s,a) using
@@ -54,15 +61,24 @@ def value_update(
         array=env.graph_current_state, 
         n_vertices=N_VERTICES,
     )
-    reward = calculate_reward_wagner(graph=graph_best_action, method='q_learning')                        
+
+    if conjecture == 'wagner':
+        reward = calculate_reward_wagner(
+            graph=graph_best_action, method='q_learning'
+        )    
+
+    if conjecture == 'brouwer': 
+        reward = calculate_reward_brouwer(
+            graph=graph_best_action, method='q_learning',
+        )                    
 
     new_value = reward + GAMMA*best_value
-    env.q_table[state][best_action] = (1-ALPHA)*env.q_table[state][best_action] + ALPHA*new_value
+    env.q_table[state][best_action] = (
+        (1-ALPHA)*env.q_table[state][best_action] + ALPHA*new_value
+    )
 
-    return graph_best_action, reward
 
-
-def tabular_q_learning(): 
+def tabular_q_learning(conjecture: str): 
     """
     This is the main function for Tabular Q-Learning.
     """
@@ -77,29 +93,15 @@ def tabular_q_learning():
             if state >= len(env.q_table)-1:
                 state = -1 
 
-            graph_best_action, reward = value_update(
+            value_update(
                 env=env, state=state, 
                 next_state=state+1,
+                conjecture=conjecture,
             )
-
-            if reward >= 0: 
-                if nx.is_connected(graph_best_action):
-                    log.info('A counterexample has been found!')
-
-                    # We write the graph into a text file and exit the program
-                    file = open('counterexample_tabular_q_learning.txt', 'w+')
-                    content = str(env.q_table) # TODO: determine what it makes more sense to write
-                    file.write(content)
-                    file.close()
-                    exit()
-
-                else:
-                    log.info(
-                        'The graph that has been found is not connected --> invalid counterexample'
-                    )
 
         print(f'Iteration #{iter} done')
 
 
 if __name__ == '__main__':
-    tabular_q_learning()
+    tabular_q_learning(conjecture='wagner')
+    tabular_q_learning(conjecture='brouwer')

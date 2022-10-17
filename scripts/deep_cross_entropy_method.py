@@ -18,13 +18,16 @@ import numpy as np
 from src.graph_theory_utils.graph_theory import build_graph_from_array
 from src.models.deep_cross_entropy_model import DeepCrossEntropyModel
 from src.rl_environments.environments import EnvCrossEntropy, N_VERTICES, N_EDGES
-from src.rl_environments.reward_functions import calculate_reward_wagner
+from src.rl_environments.reward_functions import (
+    calculate_reward_brouwer, 
+    calculate_reward_wagner,
+)
 
 
 # The following values are set arbitrarily and can be modified for experimental purposes
 N_ITERATIONS = 100000
 BATCH_SIZE = 1000 # Number of episodes in each iteration
-PERCENTILE = 93 # We will keep the first 93% episodes sorted by reward, those will be our elite
+PERCENTILE = 93 # Threshold for elite states and actions classification
 
 
 logging.basicConfig(
@@ -35,7 +38,9 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 
-def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.ndarray, np.ndarray, np.ndarray]: 
+def restart_environment_and_iterate(
+    agent: Sequential, conjecture: str,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]: 
     """
     Each time this function is called the environment is reset. That
     is, we restart the states and actions for the agent as well as the
@@ -44,11 +49,11 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.ndarray, np.n
     log.info('Resetting environment')
     env = EnvCrossEntropy(batch_size=BATCH_SIZE)
 
-    env.states[:, N_EDGES, 0] = 1 # Pintem el primer edge
+    env.states[:, N_EDGES, 0] = 1 # We add the first edge
     current_edge = 0
 
     while True:
-        prob = agent.model.predict(env.states[:,:,current_edge], batch_size = BATCH_SIZE) 
+        prob = agent.model.predict(env.states[:,:,current_edge], batch_size=BATCH_SIZE) 
 
         for episode in range(BATCH_SIZE):
             if np.random.rand() < prob[episode]:
@@ -78,10 +83,18 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.ndarray, np.n
                     array=env.states[episode], 
                     n_vertices=N_VERTICES,
                 ) 
-                env.total_rewards[episode] = calculate_reward_wagner(
-                    graph=graph, method='cross_entropy', env=env,
-                    episode=episode, current_edge=current_edge,
-                )
+
+                if conjecture == 'wagner':
+                    env.total_rewards[episode] = calculate_reward_wagner(
+                        graph=graph, method='cross_entropy', env=env,
+                        episode=episode, current_edge=current_edge,
+                    )
+
+                if conjecture == 'brouwer':
+                    env.total_rewards[episode] = calculate_reward_brouwer(
+                        graph=graph, method='cross_entropy', env=env,
+                        episode=episode, current_edge=current_edge,
+                    )
 
             if not terminal:
                 env.states[episode,:,current_edge+1] = env.next_state[episode]	
@@ -119,7 +132,7 @@ def select_elites(
     return elite_states, elite_actions
 
 
-def deep_cross_entropy_method(): 
+def deep_cross_entropy_method(conjecture: str): 
     """
     This is the main function.
 
@@ -134,7 +147,9 @@ def deep_cross_entropy_method():
     model.build_and_compile_model()
 
     for iter in range(N_ITERATIONS):
-        states, actions, total_rewards = restart_environment_and_iterate(agent=model)
+        states, actions, total_rewards = restart_environment_and_iterate(
+            agent=model, conjecture=conjecture,
+    )
         states = np.transpose(states, axes=[0,2,1])
         elite_states, elite_actions = select_elites(
             states_batch=states,
@@ -149,4 +164,5 @@ def deep_cross_entropy_method():
 
 
 if __name__ == '__main__':
-    deep_cross_entropy_method()
+    deep_cross_entropy_method(conjecture='wagner')
+    deep_cross_entropy_method(conjecture='brouwer')
