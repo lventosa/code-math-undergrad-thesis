@@ -77,18 +77,9 @@ def restart_environment_and_iterate(agent: Sequential) -> Tuple[np.ndarray, np.n
                     n_vertices=N_VERTICES,
                 ) 
                 env.total_rewards[episode] = calculate_reward_wagner(
-                    graph=graph, method='cross_entropy',
+                    graph=graph, method='cross_entropy', env=env,
+                    episode=episode, current_edge=current_edge,
                 )
-
-                if env.total_rewards[episode] > 0: 
-                    log.info('A counterexample has been found!')
-
-                    # We write the graph into a text file and exit the program
-                    file = open('counterexample_cross_entropy.txt', 'w+')
-                    content = str(env.states[episode,:,current_edge])
-                    file.write(content)
-                    file.close()
-                    exit()
 
             if not terminal:
                 env.states[episode,:,current_edge+1] = env.next_state[episode]	

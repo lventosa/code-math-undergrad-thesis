@@ -28,7 +28,7 @@ class DeepCrossEntropyModel():
         self.model.add(Dense(THIRD_LAYER_SIZE, activation='relu'))
         self.model.add(Dense(1, activation='sigmoid'))
 
-    def build_and_compile_model(self, method: str):
+    def build_and_compile_model(self):
         # We build the model based on input shapes received
         self.model.build((None, SPACE)) 
         self.model.compile(
