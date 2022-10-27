@@ -77,7 +77,7 @@ def brouwer_inequality_to_reward(
     cum_sum_eigenvals = np.cumsum(t_eigenvals)
     reward_t = cum_sum_eigenvals - n_edges - math.comb(t+1, 2)   
 
-    # If reward_t is positive for any t, we've found a counterexample  
+    # If reward_t is positive for any t, we have found a counterexample.
     if reward_t > 0:
         if method == 'cross_entropy': 
             counterexample = env.states[episode,:,current_edge]

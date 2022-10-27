@@ -149,7 +149,7 @@ def deep_cross_entropy_method(conjecture: str):
     for iter in range(N_ITERATIONS):
         states, actions, total_rewards = restart_environment_and_iterate(
             agent=model, conjecture=conjecture,
-    )
+        )
         states = np.transpose(states, axes=[0,2,1])
         elite_states, elite_actions = select_elites(
             states_batch=states,
@@ -159,8 +159,6 @@ def deep_cross_entropy_method(conjecture: str):
 
         # We train the model with elite states and elite actions
         model.fit(elite_states, elite_actions)
-
-        total_rewards.sort() # NOTE: this is useless unless we print the total rewards somewhere
 
 
 if __name__ == '__main__':

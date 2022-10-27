@@ -7,14 +7,8 @@ https://arxiv.org/abs/2104.14516
 
 import logging 
 import sys
-from typing import Tuple
 
-import networkx as nx
-
-from src.graph_theory_utils.graph_theory import (
-    build_graph_from_array, 
-    print_counterexample_to_file,
-)
+from src.graph_theory_utils.graph_theory import build_graph_from_array
 from src.rl_environments.environments import EnvQLearning, N_VERTICES
 from src.rl_environments.reward_functions import (
     calculate_reward_brouwer, 
@@ -104,4 +98,4 @@ def tabular_q_learning(conjecture: str):
 
 if __name__ == '__main__':
     tabular_q_learning(conjecture='wagner')
-    tabular_q_learning(conjecture='brouwer')
+    tabular_q_learning(conjecture='brouwer') # TODO: make sure this is reachable

@@ -19,10 +19,9 @@ THIRD_LAYER_SIZE = 4
 
 class DeepCrossEntropyModel():    
     def __init__(self):
-        self.model = Sequential()
-
         # We add three linear layers as well as their activation layers and a final output layer
         #   activated by the sigmoid function (so the final result takes values between 0 and 1).
+        self.model = Sequential()
         self.model.add(Dense(FIRST_LAYER_SIZE,  activation='relu'))
         self.model.add(Dense(SECOND_LAYER_SIZE, activation='relu'))
         self.model.add(Dense(THIRD_LAYER_SIZE, activation='relu'))
