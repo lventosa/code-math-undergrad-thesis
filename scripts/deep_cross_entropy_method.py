@@ -6,6 +6,8 @@ https://arxiv.org/abs/2104.14516
 
 His code can be found here: 
 https://github.com/zawagner22/cross-entropy-for-combinatorics
+
+This script further tries to disprove Brouwer's conjecture.
 """
 
 import logging
@@ -16,7 +18,7 @@ from keras.models import Sequential
 import numpy as np
 
 from src.graph_theory_utils.graph_theory import build_graph_from_array
-from src.models.deep_cross_entropy_model import DeepCrossEntropyModel
+from src.models.deep_cross_entropy_model import model
 from src.rl_environments.environments import EnvCrossEntropy, N_VERTICES, N_EDGES
 from src.rl_environments.reward_functions import (
     calculate_reward_brouwer, 
@@ -53,7 +55,7 @@ def restart_environment_and_iterate(
     current_edge = 0
 
     while True:
-        prob = agent.model.predict(env.states[:,:,current_edge], batch_size=BATCH_SIZE) 
+        prob = agent.predict(env.states[:,:,current_edge], batch_size=BATCH_SIZE) 
 
         for episode in range(BATCH_SIZE):
             if np.random.rand() < prob[episode]:
@@ -80,7 +82,7 @@ def restart_environment_and_iterate(
 
             if terminal:
                 graph = build_graph_from_array(
-                    array=env.states[episode], 
+                    array=env.next_state[episode], 
                     n_vertices=N_VERTICES,
                 ) 
 
@@ -109,7 +111,7 @@ def restart_environment_and_iterate(
 
 def select_elites(
     states_batch: np.ndarray, actions_batch: np.ndarray, rewards_batch: np.ndarray,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     This function selects the top states and actions given 
     the threshold set by an arbitrary percentage.
@@ -126,8 +128,8 @@ def select_elites(
             for item in actions_batch[batch_index]:
                 elite_actions.append(item)
 
-    elite_states = np.ndarray(elite_states, dtype = int)	
-    elite_actions = np.ndarray(elite_actions, dtype = int)
+    elite_states = np.array(np.array(elite_states))	
+    elite_actions = np.array(np.array(elite_actions))
 
     return elite_states, elite_actions
 
@@ -143,9 +145,6 @@ def deep_cross_entropy_method(conjecture: str):
     select the elite states and actions that will be used to train
     our agent.
     """
-    model = DeepCrossEntropyModel()
-    model.build_and_compile_model()
-
     for iter in range(N_ITERATIONS):
         states, actions, total_rewards = restart_environment_and_iterate(
             agent=model, conjecture=conjecture,
@@ -162,5 +161,5 @@ def deep_cross_entropy_method(conjecture: str):
 
 
 if __name__ == '__main__':
-    deep_cross_entropy_method(conjecture='wagner')
+    # deep_cross_entropy_method(conjecture='wagner')
     deep_cross_entropy_method(conjecture='brouwer')

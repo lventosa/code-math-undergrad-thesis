@@ -6,7 +6,7 @@ as well as Brouwer's.
 
 import numpy as np
 
-
+# These two constants are only valid for Wagner's conjecture
 N_VERTICES = 19
 N_EDGES = int(N_VERTICES*(N_VERTICES-1)/2) # A graph of n vertices has at most n(n-1)/2 edges
 
@@ -18,6 +18,7 @@ N_ACTIONS = 2
 #   (with zeros on the positions the agent has rejected or hasn't considered yet), and the next N_EDGES 
 #   bits one-hot encode which letter we are considering now. For instance, [0,1,0,0,   0,0,1,0] means we 
 #   have the partial word 01 and we are considering the third letter now.
+#   This constant is ONLY used in Wagner's conjecture.
 SPACE = N_ACTIONS*N_EDGES 
 
 

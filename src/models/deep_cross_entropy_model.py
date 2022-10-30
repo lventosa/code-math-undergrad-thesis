@@ -1,5 +1,5 @@
 """
-Model class for the deep cross entropy method.
+In this script we build the model for the deep cross entropy method.
 """
 
 from keras.layers import Dense
@@ -17,22 +17,19 @@ SECOND_LAYER_SIZE = 64
 THIRD_LAYER_SIZE = 4
 
 
-class DeepCrossEntropyModel():    
-    def __init__(self):
-        # We add three linear layers as well as their activation layers and a final output layer
-        #   activated by the sigmoid function (so the final result takes values between 0 and 1).
-        self.model = Sequential()
-        self.model.add(Dense(FIRST_LAYER_SIZE,  activation='relu'))
-        self.model.add(Dense(SECOND_LAYER_SIZE, activation='relu'))
-        self.model.add(Dense(THIRD_LAYER_SIZE, activation='relu'))
-        self.model.add(Dense(1, activation='sigmoid'))
+model = Sequential() # We instantiate a model of class Sequential()
 
-    def build_and_compile_model(self):
-        # We build the model based on input shapes received
-        self.model.build((None, SPACE)) 
-        self.model.compile(
-            loss='binary_crossentropy', # Since we predict a binary outcome 
-            optimizer=SGD(learning_rate=LEARNING_RATE), 
-        ) 
-        return self.model
+# We add three linear layers as well as their activation layers and a final output layer
+#   activated by the sigmoid function (so the final result takes values between 0 and 1).
+model.add(Dense(FIRST_LAYER_SIZE,  activation="relu"))
+model.add(Dense(SECOND_LAYER_SIZE, activation="relu"))
+model.add(Dense(THIRD_LAYER_SIZE, activation="relu"))
+model.add(Dense(1, activation="sigmoid"))
+
+model.build((None, SPACE)) # We build the model based on input shapes received
+
+model.compile(
+    loss="binary_crossentropy", # Since we predict a binary outcome 
+    optimizer=SGD(learning_rate = LEARNING_RATE), 
+) 
         

@@ -67,7 +67,7 @@ def calculate_laplacian_eigenvalues(graph: nx.Graph) -> List[float]:
     matrix that corresponds to a specific graph.
     """
     laplacian_matrix = nx.laplacian_matrix(graph).todense()
-    eigenvals = np.linalg.eigvalsh(laplacian_matrix) # TODO make sure this type corresponds to List[float]
+    eigenvals = np.linalg.eigvalsh(laplacian_matrix)
     return eigenvals
 
 

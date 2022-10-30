@@ -8,6 +8,7 @@ from typing import Union, Optional, List
 
 import networkx as nx
 import numpy as np
+import scipy.special
 
 from src.graph_theory_utils.graph_theory import (
     calculate_laplacian_eigenvalues,
@@ -33,7 +34,7 @@ def wagner_inequality_to_reward(graph: nx.Graph) -> float:
 def calculate_reward_wagner(
     graph: nx.Graph, method: str, 
     env: Union[EnvCrossEntropy, EnvQLearning],
-    current_edge: int, episode: Optional[int],
+    current_edge: int, episode: Optional[int] = None,
 ) -> float:
     """
     This function calculates the total reward for Wagner's conjecture problem. 
@@ -48,20 +49,27 @@ def calculate_reward_wagner(
     if reward > 0: 
         if method == 'cross_entropy':
             counterexample = env.states[episode,:,current_edge]
+            print_counterexample_to_file(
+                method=method, 
+                counterexample=counterexample,
+            )
+
         if method == 'q_learning': 
-            counterexample = env.states[current_edge], # TODO: make sure this is correct
-
-        print_counterexample_to_file(
-            method=method, 
-            counterexample=counterexample,
-        )
-
-    return reward
+            counterexample = env.graph_current_state
+            if not nx.is_connected(graph):
+                return reward
+            else: 
+                print_counterexample_to_file(
+                    method=method, 
+                    counterexample=counterexample,
+                )
+    else: 
+        return reward
 
 
 def brouwer_inequality_to_reward(
     method: str, t: int, n_edges: int,
-    eigenvals_list: List[float],
+    eigenvals_list: List[float], graph: nx.Graph,
     env: Union[EnvCrossEntropy, EnvQLearning],
     current_edge: int, episode: Optional[int],
 ) -> float:
@@ -74,22 +82,29 @@ def brouwer_inequality_to_reward(
     positive. In such a case, we'll have found a counterexample for the conjecture.
     """
     t_eigenvals = eigenvals_list[:t]
-    cum_sum_eigenvals = np.cumsum(t_eigenvals)
-    reward_t = cum_sum_eigenvals - n_edges - math.comb(t+1, 2)   
+    sum_eigenvals = sum(t_eigenvals)
+    reward_t = sum_eigenvals - float(n_edges) - scipy.special.comb(t+1, 2)   
 
     # If reward_t is positive for any t, we have found a counterexample.
     if reward_t > 0:
         if method == 'cross_entropy': 
             counterexample = env.states[episode,:,current_edge]
+            print_counterexample_to_file(
+                method=method, 
+                counterexample=counterexample,
+            )
+
         if method == 'q_learning': 
-            counterexample = counterexample = env.states[current_edge], # TODO: make sure this is correct
-
-        print_counterexample_to_file(
-            method=method,
-            counterexample=counterexample,
-        )
-
-    return reward_t
+            counterexample = env.graph_current_state
+            if not nx.is_connected(graph): 
+                return reward_t
+            else: 
+                print_counterexample_to_file(
+                    method=method,
+                    counterexample=counterexample,
+                )
+    else: 
+        return reward_t
 
 
 def calculate_reward_brouwer(
@@ -105,16 +120,17 @@ def calculate_reward_brouwer(
         if not nx.is_connected(graph):
             return -float('inf')
 
-    eigenvals_list = calculate_laplacian_eigenvalues(graph=graph)
-    n_eigenvals = len(eigenvals_list)
+    eigenvals = calculate_laplacian_eigenvalues(graph=graph)
+    n_eigenvals = len(eigenvals)
     n_edges = graph.number_of_edges()
 
     total_reward = 0
 
     for t in range(1, n_eigenvals+1):
         reward_t = brouwer_inequality_to_reward(
-            method=method, n_edges=n_edges,
-            n_eigenvals=n_eigenvals, t=t,
+            method=method, n_edges=n_edges, 
+            t=t, graph=graph,
+            eigenvals_list=list(eigenvals),
             env=env, episode=episode,
             current_edge=current_edge,
         )

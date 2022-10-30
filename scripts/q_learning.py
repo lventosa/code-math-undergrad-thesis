@@ -1,8 +1,8 @@
 """
 Tabular and Deep Q-Learning to disprove a graph theory conjecture.
 
-I'm trying to disprove conjecture 2.1 from the following paper: 
-https://arxiv.org/abs/2104.14516
+I'm trying to disprove conjecture 2.1 from the paper 
+https://arxiv.org/abs/2104.14516 as well as Brouwer's conjecture.
 """
 
 import logging 
@@ -18,6 +18,7 @@ from src.rl_environments.reward_functions import (
 
 GAMMA = 0.9 # Discount rate
 ALPHA = 0.2 # Learning rate when updating the Q-value
+MAX_ITER = 10000
 
 
 logging.basicConfig(
@@ -58,12 +59,14 @@ def value_update(
 
     if conjecture == 'wagner':
         reward = calculate_reward_wagner(
-            graph=graph_best_action, method='q_learning'
+            graph=graph_best_action, method='q_learning',
+            env=env, current_edge=state, 
         )    
 
     if conjecture == 'brouwer': 
         reward = calculate_reward_brouwer(
             graph=graph_best_action, method='q_learning',
+            env=env, current_edge=state,
         )                    
 
     new_value = reward + GAMMA*best_value
@@ -95,7 +98,10 @@ def tabular_q_learning(conjecture: str):
 
         print(f'Iteration #{iter} done')
 
+        if iter == MAX_ITER: 
+            exit()
+
 
 if __name__ == '__main__':
     tabular_q_learning(conjecture='wagner')
-    tabular_q_learning(conjecture='brouwer') # TODO: make sure this is reachable
+    tabular_q_learning(conjecture='brouwer') 
