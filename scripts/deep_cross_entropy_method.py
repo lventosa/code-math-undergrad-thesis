@@ -27,7 +27,7 @@ from src.rl_environments.reward_functions import (
 
 
 # The following values are set arbitrarily and can be modified for experimental purposes
-N_ITERATIONS = 100000
+MAX_ITER = 100000
 BATCH_SIZE = 1000 # Number of episodes in each iteration
 PERCENTILE = 93 # Threshold for elite states and actions classification
 
@@ -134,7 +134,7 @@ def select_elites(
     return elite_states, elite_actions
 
 
-def deep_cross_entropy_method(conjecture: str): 
+def deep_cross_entropy_method(conjecture: str) -> None: 
     """
     This is the main function.
 
@@ -145,7 +145,7 @@ def deep_cross_entropy_method(conjecture: str):
     select the elite states and actions that will be used to train
     our agent.
     """
-    for iter in range(N_ITERATIONS):
+    for iter in range(MAX_ITER):
         states, actions, total_rewards = restart_environment_and_iterate(
             agent=model, conjecture=conjecture,
         )
@@ -161,5 +161,5 @@ def deep_cross_entropy_method(conjecture: str):
 
 
 if __name__ == '__main__':
-    # deep_cross_entropy_method(conjecture='wagner')
-    deep_cross_entropy_method(conjecture='brouwer')
+    deep_cross_entropy_method(conjecture='wagner')
+    # deep_cross_entropy_method(conjecture='brouwer')

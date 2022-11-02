@@ -75,7 +75,7 @@ def value_update(
     )
 
 
-def tabular_q_learning(conjecture: str): 
+def tabular_q_learning(conjecture: str) -> None: 
     """
     This is the main function for Tabular Q-Learning.
     """
@@ -84,7 +84,7 @@ def tabular_q_learning(conjecture: str):
 
     iter = 0
 
-    while True: 
+    while iter < MAX_ITER: 
         iter += 1
         for state in env.states:
             if state >= len(env.q_table)-1:
@@ -98,10 +98,7 @@ def tabular_q_learning(conjecture: str):
 
         print(f'Iteration #{iter} done')
 
-        if iter == MAX_ITER: 
-            exit()
-
 
 if __name__ == '__main__':
     tabular_q_learning(conjecture='wagner')
-    tabular_q_learning(conjecture='brouwer') 
+    # tabular_q_learning(conjecture='brouwer') 

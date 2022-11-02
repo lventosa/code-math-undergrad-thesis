@@ -15,7 +15,9 @@ project:
 
 containers: 
   - projectDir: /workspace/project
-    image: pytorch/pytorch:latest
+    image: tensorflow/tensorflow
+    env:
+      PYTHONPATH: /workspace/project
     volumeMounts: 
       - name: workspace
         mountPath: /workspace
@@ -30,10 +32,11 @@ instances:
       volumes: 
         - name: workspace
           parameters: 
-            size: 20
+            size: 50
 
 
 scripts:
   main: |
+    pip install -r requirements.txt
     python scripts/deep_cross_entropy_method.py
     python scripts/q_learning.py
