@@ -7,7 +7,6 @@ import math
 from typing import Union, Optional, List
 
 import networkx as nx
-import numpy as np
 import scipy.special
 
 from src.graph_theory_utils.graph_theory import (
@@ -40,31 +39,27 @@ def calculate_reward_wagner(
     This function calculates the total reward for Wagner's conjecture problem. 
     """
     if method == 'cross_entropy':
-        # The conjecture assumes our graph is connected. We get rid of unconnected graphs.
-        if not nx.is_connected(graph):
-            return -float('inf')
+        max_penalty = -float('inf')
+    elif method == 'q_learning':
+        max_penalty = -10000
 
-    reward = wagner_inequality_to_reward(graph=graph)
+    # The conjecture assumes our graph is connected. We get rid of unconnected graphs.
+    if not nx.is_connected(graph):
+        return max_penalty
 
-    if reward > 0: 
-        if method == 'cross_entropy':
-            counterexample = env.states[episode,:,current_edge]
+    else: 
+        reward = wagner_inequality_to_reward(graph=graph)
+        if reward > 0: 
+            if method == 'cross_entropy':
+                counterexample = env.states[episode,:,current_edge]
+            elif method == 'q_learning': 
+                counterexample = env.graph_current_state
             print_counterexample_to_file(
                 method=method, 
                 counterexample=counterexample,
             )
-
-        if method == 'q_learning': 
-            counterexample = env.graph_current_state
-            if not nx.is_connected(graph):
-                return reward
-            else: 
-                print_counterexample_to_file(
-                    method=method, 
-                    counterexample=counterexample,
-                )
-    else: 
-        return reward
+        else: 
+            return reward
 
 
 def brouwer_inequality_to_reward(
@@ -89,20 +84,12 @@ def brouwer_inequality_to_reward(
     if reward_t > 0:
         if method == 'cross_entropy': 
             counterexample = env.states[episode,:,current_edge]
-            print_counterexample_to_file(
-                method=method, 
-                counterexample=counterexample,
-            )
-
-        if method == 'q_learning': 
+        elif method == 'q_learning': 
             counterexample = env.graph_current_state
-            if not nx.is_connected(graph): 
-                return reward_t
-            else: 
-                print_counterexample_to_file(
-                    method=method,
-                    counterexample=counterexample,
-                )
+        print_counterexample_to_file(
+            method=method,
+            counterexample=counterexample,
+        )  
     else: 
         return reward_t
 
@@ -116,15 +103,19 @@ def calculate_reward_brouwer(
     This function calculates the total reward for Brouwer's conjecture problem. 
     """
     if method == 'cross_entropy':
-        # The conjecture assumes our graph is connected. We get rid of unconnected graphs.
-        if not nx.is_connected(graph):
-            return -float('inf')
+        max_penalty = -float('inf')
+    elif method == 'q_learning':
+        max_penalty = -10000
+
+    # TODO: perform checks and return max_penalty for the types of graphs for
+    #   which the conjecture is known to be true
 
     eigenvals = calculate_laplacian_eigenvalues(graph=graph)
     n_eigenvals = len(eigenvals)
     n_edges = graph.number_of_edges()
 
-    total_reward = 0
+    # Total reward accounted as the sum of all rewards fot t in [1,n]
+    total_reward = 0 
 
     for t in range(1, n_eigenvals+1):
         reward_t = brouwer_inequality_to_reward(
