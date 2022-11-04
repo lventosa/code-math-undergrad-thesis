@@ -7,6 +7,7 @@ import math
 from typing import Union, Optional, List
 
 import networkx as nx
+import sagemath as sg
 import scipy.special
 
 from src.graph_theory_utils.graph_theory import (
@@ -40,6 +41,9 @@ def calculate_reward_wagner(
     """
     if method == 'cross_entropy':
         max_penalty = -float('inf')
+
+    # Since q_learning sums reward values, we cannot assign -inf to max_penalty.
+    #   Otherwise, all Q-values would be -inf
     elif method == 'q_learning':
         max_penalty = -10000
 
@@ -64,7 +68,7 @@ def calculate_reward_wagner(
 
 def brouwer_inequality_to_reward(
     method: str, t: int, n_edges: int,
-    eigenvals_list: List[float], graph: nx.Graph,
+    eigenvals_list: List[float],
     env: Union[EnvCrossEntropy, EnvQLearning],
     current_edge: int, episode: Optional[int],
 ) -> float:
@@ -104,27 +108,45 @@ def calculate_reward_brouwer(
     """
     if method == 'cross_entropy':
         max_penalty = -float('inf')
+
+    # Since q_learning sums reward values, we cannot assign -inf to max_penalty.
+    #   Otherwise, all Q-values would be -inf
     elif method == 'q_learning':
-        max_penalty = -10000
+        max_penalty = -100000
 
-    # TODO: perform checks and return max_penalty for the types of graphs for
-    #   which the conjecture is known to be true
+    # Graphs for which the Brouwer's conjecture has been proved to 
+    #   be true need to have a high penalty attached 
+    elif nx.is_regular(graph):
+        return max_penalty
 
-    eigenvals = calculate_laplacian_eigenvalues(graph=graph)
-    n_eigenvals = len(eigenvals)
-    n_edges = graph.number_of_edges()
+    if nx.is_tree(graph):
+        return max_penalty
 
-    # Total reward accounted as the sum of all rewards fot t in [1,n]
-    total_reward = 0 
+    elif nx.is_connected(graph): 
+        if len(nx.simple_cycles(graph)) in [1, 2]: # unicyclic or bicyclic
+            return max_penalty
 
-    for t in range(1, n_eigenvals+1):
-        reward_t = brouwer_inequality_to_reward(
-            method=method, n_edges=n_edges, 
-            t=t, graph=graph,
-            eigenvals_list=list(eigenvals),
-            env=env, episode=episode,
-            current_edge=current_edge,
-        )
-        total_reward += reward_t
+    elif sg.is_cograph(graph): # This includes threshold graphs anc complete k-partite graphs
+        return max_penalty
 
-    return total_reward
+    elif sg.is_split(graph): 
+        return max_penalty
+
+    else:
+        eigenvals = calculate_laplacian_eigenvalues(graph=graph)
+        n_eigenvals = len(eigenvals)
+        n_edges = graph.number_of_edges()
+
+        # Total reward accounted as the sum of all rewards fot t in [1,n]
+        total_reward = 0 
+
+        for t in range(1, n_eigenvals+1):
+            reward_t = brouwer_inequality_to_reward(
+                method=method, n_edges=n_edges, 
+                eigenvals_list=list(eigenvals),
+                env=env, episode=episode, t=t,
+                current_edge=current_edge,
+            )
+            total_reward += reward_t
+
+        return total_reward
