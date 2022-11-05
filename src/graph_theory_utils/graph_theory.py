@@ -9,7 +9,6 @@ from typing import List
 import networkx as nx
 import numpy as np
 
-
 logging.basicConfig(
     stream=sys.stdout,
     datefmt='%Y-%m-%d %H:%M',

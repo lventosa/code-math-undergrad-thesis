@@ -7,7 +7,6 @@ import math
 from typing import Union, Optional, List
 
 import networkx as nx
-import sagemath as sg
 import scipy.special
 
 from src.graph_theory_utils.graph_theory import (
@@ -114,22 +113,21 @@ def calculate_reward_brouwer(
     elif method == 'q_learning':
         max_penalty = -100000
 
+    graph_c = nx.complement(graph)
+
     # Graphs for which the Brouwer's conjecture has been proved to 
     #   be true need to have a high penalty attached 
-    elif nx.is_regular(graph):
+    if nx.is_regular(graph):
         return max_penalty
 
-    if nx.is_tree(graph):
+    elif nx.is_tree(graph):
         return max_penalty
 
     elif nx.is_connected(graph): 
         if len(nx.simple_cycles(graph)) in [1, 2]: # unicyclic or bicyclic
             return max_penalty
 
-    elif sg.is_cograph(graph): # This includes threshold graphs anc complete k-partite graphs
-        return max_penalty
-
-    elif sg.is_split(graph): 
+    elif nx.is_chordal(graph) and nx.is_cordal(graph_c): # split graph
         return max_penalty
 
     else:
