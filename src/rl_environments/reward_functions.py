@@ -15,10 +15,12 @@ from src.graph_theory_utils.graph_theory import (
     calculate_max_abs_val_eigenvalue,
     print_counterexample_to_file,
 )
-from src.rl_environments.environments import N_VERTICES, EnvCrossEntropy, EnvQLearning
+from src.rl_environments.environments import EnvCrossEntropy, EnvQLearning
 
 
-def wagner_inequality_to_reward(graph: nx.Graph) -> float: 
+def wagner_inequality_to_reward(
+    graph: nx.Graph, n_vertices: int,
+) -> float: 
     """
     We want to disprove that lambda1 + mu >= sqrt(N-1) + 1.
     If we consider our reward function to be sqrt(N-1) + 1 - (lambda1 + mu),
@@ -27,22 +29,27 @@ def wagner_inequality_to_reward(graph: nx.Graph) -> float:
     """
     lambda1 = calculate_max_abs_val_eigenvalue(graph=graph)
     mu = calculate_matching_number(graph=graph)
-    return math.sqrt(N_VERTICES-1) + 1 - (lambda1 + mu) 
+    return math.sqrt(n_vertices-1) + 1 - (lambda1 + mu) 
 
 
 def calculate_reward_wagner(
-    graph: nx.Graph, method: str, 
+    graph: nx.Graph, method: str, n_vertices: int,
     env: Union[EnvCrossEntropy, EnvQLearning],
     current_edge: int, episode: Optional[int] = None,
 ) -> float:
     """
-    This function calculates the total reward for Wagner's conjecture problem. 
+    This function calculates the total reward for Wagner's conjecture problem. If
+    the graph is not connected (an assumption in Wagner's problem), the reward takes
+    the value of a maximum penalty.
+
+    The maximum penalty for the Deep Cross Entropy method is -infinity. However,
+    for the tabular Q-Learning method we cannot establish the maximum penalty to 
+    be -infinity since this would make the recursive sum that is computed to obtain
+    the Q-values to be -infinity. Therefore, the maximum penalty for the Q-Learning
+    method is an arbitrarily low number.
     """
     if method == 'cross_entropy':
         max_penalty = -float('inf')
-
-    # Since q_learning sums reward values, we cannot assign -inf to max_penalty.
-    #   Otherwise, all Q-values would be -inf
     elif method == 'q_learning':
         max_penalty = -10000
 
@@ -51,7 +58,9 @@ def calculate_reward_wagner(
         return max_penalty
 
     else: 
-        reward = wagner_inequality_to_reward(graph=graph)
+        reward = wagner_inequality_to_reward(
+            graph=graph, n_vertices=n_vertices,
+        )
         if reward > 0: 
             if method == 'cross_entropy':
                 counterexample = env.states[episode,:,current_edge]
@@ -98,40 +107,58 @@ def brouwer_inequality_to_reward(
 
 
 def calculate_reward_brouwer(
-    graph: nx.Graph, method: str,
+    graph: nx.Graph, method: str, signless_laplacian: bool,
     env: Union[EnvCrossEntropy, EnvQLearning],
-    current_edge: int, episode: Optional[int],
+    current_edge: int, episode: Optional[int] = None,
 ) -> float:
     """
     This function calculates the total reward for Brouwer's conjecture problem. 
+
+    It defines a maximum penalty depending on the method used and assigns this 
+    maximum penalty to graphs for which the Brouwer conjecture has been proved 
+    to be true. These graphs are: 
+        - Regular graphs
+        - Trees
+        - Unicyclic graphs
+        - Bicyclic graphs
+        - Split graphs
+
+    The maximum penalty for the Deep Cross Entropy method is -infinity. However,
+    for the tabular Q-Learning method we cannot establish the maximum penalty to 
+    be -infinity since this would make the recursive sum that is computed to obtain
+    the Q-values to be -infinity. Therefore, the maximum penalty for the Q-Learning
+    method is an arbitrarily low number.
     """
     if method == 'cross_entropy':
         max_penalty = -float('inf')
-
-    # Since q_learning sums reward values, we cannot assign -inf to max_penalty.
-    #   Otherwise, all Q-values would be -inf
     elif method == 'q_learning':
         max_penalty = -100000
 
     graph_c = nx.complement(graph)
 
-    # Graphs for which the Brouwer's conjecture has been proved to 
-    #   be true need to have a high penalty attached 
+    # We replace each undirected edge with two directed edges so that we 
+    #   can check if the graph contains simple cycles with simple_cycle()
+    graph_dir = graph.to_directed()
+
     if nx.is_regular(graph):
         return max_penalty
 
     elif nx.is_tree(graph):
         return max_penalty
 
-    elif nx.is_connected(graph): 
-        if len(nx.simple_cycles(graph)) in [1, 2]: # unicyclic or bicyclic
-            return max_penalty
+    elif nx.is_connected(graph) and len(list(nx.simple_cycles(graph_dir))) == 1: # unicyclic
+        return max_penalty
 
-    elif nx.is_chordal(graph) and nx.is_cordal(graph_c): # split graph
+    elif len(list(nx.simple_cycles(graph_dir))) == 2: # bicyclic
+        return max_penalty
+
+    elif nx.is_chordal(graph) and nx.is_chordal(graph_c): # split graph
         return max_penalty
 
     else:
-        eigenvals = calculate_laplacian_eigenvalues(graph=graph)
+        eigenvals = calculate_laplacian_eigenvalues(
+            graph=graph, signless_laplacian=signless_laplacian,
+        )
         n_eigenvals = len(eigenvals)
         n_edges = graph.number_of_edges()
 

@@ -60,12 +60,16 @@ def calculate_max_abs_val_eigenvalue(graph: nx.Graph) -> float:
     return max(eigenvals_abs)
 
 
-def calculate_laplacian_eigenvalues(graph: nx.Graph) -> List[float]:
+def calculate_laplacian_eigenvalues(
+    graph: nx.Graph, signless_laplacian: bool,
+) -> List[float]:
     """
     This function computes the eigenvalues of the laplacian
     matrix that corresponds to a specific graph.
     """
     laplacian_matrix = nx.laplacian_matrix(graph).todense()
+    if signless_laplacian: 
+        laplacian_matrix = np.abs(laplacian_matrix)
     eigenvals = np.linalg.eigvalsh(laplacian_matrix)
     return eigenvals
 
@@ -80,7 +84,7 @@ def print_counterexample_to_file(
     log.info('A counterexample has been found!')
 
     # We write the graph into a text file and exit the program
-    file = open(f'../output/{method}/counterexample.txt', 'w+') # TODO: make sure this path is correct
+    file = open(f'../output/{method}/counterexample.txt', 'w+') 
     content = str(counterexample)
     file.write(content)
     file.close()

@@ -7,9 +7,10 @@ https://arxiv.org/abs/2104.14516 as well as Brouwer's conjecture.
 
 import logging 
 import sys
+from typing import Optional
 
 from src.graph_theory_utils.graph_theory import build_graph_from_array
-from src.rl_environments.environments import EnvQLearning, N_VERTICES
+from src.rl_environments.environments import EnvQLearning, N_VERTICES_W, N_EDGES_W
 from src.rl_environments.reward_functions import (
     calculate_reward_brouwer, 
     calculate_reward_wagner,
@@ -21,17 +22,20 @@ ALPHA = 0.2 # Learning rate when updating the Q-value
 MAX_ITER = 10000
 
 
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+
 logging.basicConfig(
     stream=sys.stdout,
     datefmt='%Y-%m-%d %H:%M',
-    format='%(asctime)s | %(message)s'
+    format='%(asctime)s | %(message)s',
 )
-log = logging.getLogger(__name__)
 
 
 def value_update(
     env: EnvQLearning, state: int, 
-    next_state: int, conjecture: str,
+    n_vertices: int, next_state: int, 
+    conjecture: str, signless_laplacian: bool, 
 ) -> None:
     """
     This function allows us to update the Q-value using 
@@ -54,12 +58,14 @@ def value_update(
 
     graph_best_action = build_graph_from_array( 
         array=env.graph_current_state, 
-        n_vertices=N_VERTICES,
+        n_vertices=n_vertices,
     )
 
     if conjecture == 'wagner':
         reward = calculate_reward_wagner(
-            graph=graph_best_action, method='q_learning',
+            graph=graph_best_action,
+            method='q_learning', 
+            n_vertices=n_vertices,
             env=env, current_edge=state, 
         )    
 
@@ -67,6 +73,7 @@ def value_update(
         reward = calculate_reward_brouwer(
             graph=graph_best_action, method='q_learning',
             env=env, current_edge=state,
+            signless_laplacian=signless_laplacian,
         )                    
 
     new_value = reward + GAMMA*best_value
@@ -75,30 +82,64 @@ def value_update(
     )
 
 
-def tabular_q_learning(conjecture: str) -> None: 
+def tabular_q_learning(
+    conjecture: str, n_edges: int, n_vertices: int,
+    signless_laplacian: Optional[bool] = False
+) -> None: 
     """
     This is the main function for Tabular Q-Learning.
+
+    The signless laplacian argument is only relevant
+    for Brouwer's conjecture.
     """
-    env = EnvQLearning() 
+    env = EnvQLearning(n_edges=n_edges) 
     env.initialize_q_table()
 
-    iter = 0
-
-    while iter < MAX_ITER: 
-        iter += 1
+    for iter in range(MAX_ITER):
         for state in env.states:
             if state >= len(env.q_table)-1:
                 state = -1 
 
             value_update(
                 env=env, state=state, 
+                n_vertices=n_vertices,
                 next_state=state+1,
                 conjecture=conjecture,
+                signless_laplacian=signless_laplacian,
             )
 
-        print(f'Iteration #{iter} done')
+        log.info(f'Iteration #{iter+1} done')
 
 
 if __name__ == '__main__':
-    tabular_q_learning(conjecture='wagner')
-    # tabular_q_learning(conjecture='brouwer') 
+    # Wagner's conjecture
+    log.info(f"Running tabular Q-Learning for Wagner's conjecture")
+    tabular_q_learning(
+        conjecture='wagner', 
+        n_vertices=N_VERTICES_W,
+        n_edges=N_EDGES_W,
+    )
+
+    # Brouwer's conjecture and variants
+    for n_vertices in range(11, 21): # From 11 to 20 (it's been proved true for n_vertices<11)
+        n_edges = int(n_vertices*(n_vertices-1)/2) # A graph of n vertices has at most n(n-1)/2 edges
+        log.info(
+            f"Running tabular Q-Learning for Brouwer's "
+            f"conjecture for {n_vertices}-vertex graphs"
+        )
+        tabular_q_learning(
+            conjecture='brouwer',
+            n_vertices=n_vertices,
+            n_edges=n_edges,
+        ) 
+
+        log.info(
+            f"Running tabular Q-Learning for Brouwer's conjecture "
+            f"with signless Laplacian for {n_vertices}-vertex graphs"
+        )
+        tabular_q_learning(
+            conjecture='brouwer', 
+            n_vertices=n_vertices,
+            n_edges=n_edges,
+            signless_laplacian=True
+        ) 
