@@ -15,7 +15,7 @@ project:
 
 containers: 
   - projectDir: /workspace/project
-    image: tensorflow/tensorflow
+    image: tensorflow/tensorflow-gpu
     env:
       PYTHONPATH: /workspace/project
     volumeMounts: 
@@ -28,7 +28,7 @@ instances:
     provider: aws
     parameters: 
       region: eu-west-3
-      instanceType: t3.micro
+      instanceType: g4dn.xlarge
       volumes: 
         - name: workspace
           parameters: 
