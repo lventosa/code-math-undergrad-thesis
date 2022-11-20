@@ -4,7 +4,7 @@
 
 
 project:
-  name: code-tfg
+  name: tfg-code
   syncFilters:
     - exclude:
       - .venv/*
@@ -15,7 +15,7 @@ project:
 
 containers: 
   - projectDir: /workspace/project
-    image: tensorflow/tensorflow-gpu
+    image: tensorflow/tensorflow:latest-gpu
     env:
       PYTHONPATH: /workspace/project
     volumeMounts: 
@@ -24,11 +24,12 @@ containers:
 
 
 instances: 
-  - name: aws-1
+  - name: aws-execution-1
     provider: aws
     parameters: 
       region: eu-west-3
       instanceType: g4dn.xlarge
+      spotInstance: True
       volumes: 
         - name: workspace
           parameters: 
