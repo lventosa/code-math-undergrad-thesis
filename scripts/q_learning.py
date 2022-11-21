@@ -122,7 +122,6 @@ if __name__ == '__main__':
         n_edges=N_EDGES_W,
     )
 
-    """
     # Brouwer's conjecture and variants
     for n_vertices in range(11, 21): # From 11 to 20 (it's been proved true for n_vertices<11)
         n_edges = int(n_vertices*(n_vertices-1)/2) # A graph of n vertices has at most n(n-1)/2 edges
@@ -146,4 +145,3 @@ if __name__ == '__main__':
             n_edges=n_edges,
             signless_laplacian=True
         ) 
-    """
