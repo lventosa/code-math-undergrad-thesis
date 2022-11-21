@@ -137,7 +137,8 @@ def calculate_reward_brouwer(
     graph_c = nx.complement(graph)
 
     # We replace each undirected edge with two directed edges so that we 
-    #   can check if the graph contains simple cycles with simple_cycle()
+    #   can check if the graph contains simple cycles with simple_cycles()
+    #   as simple_cycles() only works with directed graphs.
     graph_dir = graph.to_directed()
 
     if nx.is_regular(graph):
@@ -162,8 +163,8 @@ def calculate_reward_brouwer(
         n_eigenvals = len(eigenvals)
         n_edges = graph.number_of_edges()
 
-        # Total reward accounted as the sum of all rewards fot t in [1,n]
-        total_reward = 0 
+        # Total reward will be the maximum reward_t
+        max_reward = 0 
 
         for t in range(1, n_eigenvals+1):
             reward_t = brouwer_inequality_to_reward(
@@ -172,6 +173,7 @@ def calculate_reward_brouwer(
                 env=env, episode=episode, t=t,
                 current_edge=current_edge,
             )
-            total_reward += reward_t
+            if reward_t > max_reward:
+                max_reward = reward_t           
 
-        return total_reward
+        return max_reward
