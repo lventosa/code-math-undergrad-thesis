@@ -11,7 +11,6 @@ This script further tries to disprove Brouwer's conjecture.
 """
 
 import logging
-import sys
 from typing import Tuple, Optional
 
 from keras.models import Sequential
@@ -28,7 +27,8 @@ from src.rl_environments.reward_functions import (
 )
 
 
-# The following values are set arbitrarily and can be modified for experimental purposes
+# The following values are set arbitrarily and can be modified 
+#   for experimental purposes
 MAX_ITER = 100000
 BATCH_SIZE = 1000 # Number of episodes in each iteration
 PERCENTILE = 93 # Threshold for elite states and actions classification
@@ -38,11 +38,12 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 logging.basicConfig(
-    stream=sys.stdout,
-    filename='logs.txt',
-    filemode='w',
-    datefmt='%Y-%m-%d %H:%M',
+    datefmt='%Y-%m-%d %H:%M:%S',
     format='%(asctime)s | %(message)s',
+    handlers = [
+        logging.FileHandler('logs_cross_entropy.log'),
+        logging.StreamHandler()
+    ]
 )
 
 
@@ -68,7 +69,7 @@ def restart_environment_and_iterate(
     current_edge = 0
 
     while True:
-        prob = agent.predict(env.states[:,:,current_edge], batch_size=BATCH_SIZE) 
+        prob = agent.predict(env.states[:,:,current_edge], BATCH_SIZE) 
 
         for episode in range(BATCH_SIZE):
             if np.random.rand() < prob[episode]:
@@ -98,6 +99,8 @@ def restart_environment_and_iterate(
                     array=env.next_state[episode], 
                     n_vertices=n_vertices,
                 ) 
+                # We print the array representing the graph
+                # print(env.next_state[episode])
 
                 if conjecture == 'wagner':
                     env.total_rewards[episode] = calculate_reward_wagner(
@@ -126,7 +129,8 @@ def restart_environment_and_iterate(
 
 
 def select_elites(
-    states_batch: np.ndarray, actions_batch: np.ndarray, rewards_batch: np.ndarray,
+    states_batch: np.ndarray, actions_batch: np.ndarray, 
+    rewards_batch: np.ndarray,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     This function selects the top states and actions given 
@@ -204,9 +208,11 @@ if __name__ == '__main__':
         n_edges=N_EDGES_W, n_actions=N_ACTIONS,
     )
 
-    # Brouwer's conjecture and variants
-    for n_vertices in range(11, 21): # From 11 to 20 (it's been proved true for n_vertices<11)
-        n_edges = int(n_vertices*(n_vertices-1)/2) # A graph of n vertices has at most n(n-1)/2 edges
+    # Brouwer's conjecture
+    #   From 11 to 20 (it's been proved true for n_vertices<11)
+    for n_vertices in range(11, 21): 
+        # A graph of n vertices has at most n(n-1)/2 edges
+        n_edges = int(n_vertices*(n_vertices-1)/2) 
         log.info(
             f"Running Deep Cross Entropy for Brouwer's"
             f"conjecture for {n_vertices}-vertex graphs"
@@ -216,12 +222,16 @@ if __name__ == '__main__':
             n_edges=n_edges, n_actions=N_ACTIONS,
         )
 
+    # Variant of Brouwer's conjecture
+    #   We only consider graphs of at most 10 vertices
+    for n_vertices in range(2, 11):
+        n_edges = int(n_vertices*(n_vertices-1)/2) 
         log.info(
             f"Running Deep Cross Entropy for Brouwer's conjecture"
             f"with signless Laplacian for {n_vertices}-vertex graphs"
         )
         deep_cross_entropy_method(
-           conjecture='brouwer', n_vertices=n_vertices,
-           n_edges=n_edges, n_actions=N_ACTIONS,
-           signless_laplacian=True,
+            conjecture='brouwer', n_vertices=n_vertices,
+            n_edges=n_edges, n_actions=N_ACTIONS,
+            signless_laplacian=True,
         )

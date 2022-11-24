@@ -75,13 +75,16 @@ def calculate_laplacian_eigenvalues(
 
 
 def print_counterexample_to_file(
-    method: str, counterexample: np.ndarray,
+    method: str, conjecture: str, counterexample: np.ndarray, 
 ) -> None:
     """
     This function prints the graph that has been identified as a
     counterexample into a .txt file in the output/ directory.
     """
-    log.info('A counterexample has been found!')
+    log.info(
+        f'A counterexample to {conjecture}\'s conjecture'
+        f'has been found using {method}!'
+    )
 
     # We write the graph into a text file and exit the program
     file = open(f'../output/{method}/counterexample.txt', 'w+') 

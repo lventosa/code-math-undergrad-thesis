@@ -6,12 +6,14 @@ as well as Brouwer's.
 
 import numpy as np
 
-# These two constants are only valid for **Wagner's conjecture**
+# The first two constants are only valid for **Wagner's conjecture**
 N_VERTICES_W = 19
-N_EDGES_W = int(N_VERTICES_W*(N_VERTICES_W-1)/2) # A graph of n vertices has at most n(n-1)/2 edges
 
-# At each state (pair of vertices) we only have two actions: to add an edge joining those two 
-#   vertices or to leave them unconnected (no edge)
+# A graph of n vertices has at most n(n-1)/2 edges
+N_EDGES_W = int(N_VERTICES_W*(N_VERTICES_W-1)/2) 
+
+# At each state (pair of vertices) we only have two actions: to add an edge 
+#   joining those two vertices or to leave them unconnected (no edge)
 N_ACTIONS = 2 
 
 
@@ -38,7 +40,8 @@ class EnvQLearning():
         This function initializes the Q-table. Its dimension
         is equal to the number of states.
         """
-        # The number of simple graphs of n vertices is 2^{n(n-1)/2}, where {n(n-1)/2} is 
-        #   what we call N_EDGES. That is, we have 2^N_EDGES possible states and N_ACTIONS = 2.
+        # The number of simple graphs of n vertices is 2^{n(n-1)/2}, where 
+        #   n(n-1)/2 is what we call N_EDGES. That is, we have 2^N_EDGES 
+        #   possible states and N_ACTIONS = 2.
         self.q_table = np.random.randint(0, 10, size=(self.n_edges, N_ACTIONS))
         self.q_table = self.q_table.astype(np.float)
