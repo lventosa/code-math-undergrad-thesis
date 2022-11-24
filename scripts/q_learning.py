@@ -26,9 +26,13 @@ MAX_ITER = 10000
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+
 logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S',
     format='%(asctime)s | %(message)s',
+    level=logging.INFO,
     handlers = [
         logging.FileHandler('logs_qlearning.log'),
         logging.StreamHandler()
