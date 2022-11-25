@@ -1,4 +1,4 @@
-keras==2.10.0
+keras==2.11.0
 networkx==2.6.3
 numpy==1.21.6
 scipy==1.7.3

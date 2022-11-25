@@ -155,11 +155,11 @@ def calculate_reward_brouwer(
 
         elif ( 
             nx.is_connected(graph) and 
-            len(list(nx.simple_cycles(graph_dir))) == 1
-        ): # unicyclic
-            return max_penalty
+            len(list(nx.simple_cycles(graph_dir))) == 1 
+        ): # unicyclic # TODO: fix this
+            return max_penalty 
 
-        elif len(list(nx.simple_cycles(graph_dir))) == 2: # bicyclic
+        elif len(list(nx.simple_cycles(graph_dir))) == 2: # bicyclic # TODO: fix this
             return max_penalty
 
         elif nx.is_chordal(graph) and nx.is_chordal(graph_c): # split graph
