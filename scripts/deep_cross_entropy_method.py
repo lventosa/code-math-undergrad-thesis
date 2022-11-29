@@ -186,20 +186,24 @@ def deep_cross_entropy_method(
     model = create_neural_network_model(space_size=space_size)
 
     for iter in range(MAX_ITER):
-        states, actions, total_rewards = restart_environment_and_iterate(
-            agent=model, conjecture=conjecture, n_edges=n_edges,
-            n_vertices=n_vertices, space_size=space_size,
-            signless_laplacian=signless_laplacian,
-        )
-        states = np.transpose(states, axes=[0,2,1])
-        elite_states, elite_actions = select_elites(
-            states_batch=states,
-            actions_batch=actions,
-            rewards_batch=total_rewards,
-        )
+        try: 
+            states, actions, total_rewards = restart_environment_and_iterate(
+                agent=model, conjecture=conjecture, n_edges=n_edges,
+                n_vertices=n_vertices, space_size=space_size,
+                signless_laplacian=signless_laplacian,
+            )
+            states = np.transpose(states, axes=[0,2,1])
+            elite_states, elite_actions = select_elites(
+                states_batch=states,
+                actions_batch=actions,
+                rewards_batch=total_rewards,
+            )
 
-        # We train the model with elite states and elite actions
-        model.fit(elite_states, elite_actions)
+            # We train the model with elite states and elite actions
+            model.fit(elite_states, elite_actions)
+
+        except Exception as error:
+            log.error(error)
 
         log.info(f'Iteration #{iter+1} done')
 

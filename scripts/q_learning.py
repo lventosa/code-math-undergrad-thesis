@@ -108,16 +108,20 @@ def tabular_q_learning(
 
     for iter in range(MAX_ITER):
         for state in env.states:
-            if state >= len(env.q_table)-1:
-                state = -1 
+            try: 
+                if state >= len(env.q_table)-1:
+                    state = -1 
 
-            value_update(
-                env=env, state=state, 
-                n_vertices=n_vertices,
-                next_state=state+1,
-                conjecture=conjecture,
-                signless_laplacian=signless_laplacian,
-            )
+                value_update(
+                    env=env, state=state, 
+                    n_vertices=n_vertices,
+                    next_state=state+1,
+                    conjecture=conjecture,
+                    signless_laplacian=signless_laplacian,
+                )
+
+            except Exception as error:
+                log.error(error)
 
         log.info(f'Iteration #{iter+1} done')
 
