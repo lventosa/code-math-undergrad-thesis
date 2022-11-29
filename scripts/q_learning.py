@@ -10,7 +10,7 @@ from typing import Optional
 
 from src.graph_theory_utils.graph_theory import build_graph_from_array
 from src.rl_environments.environments import (
-    EnvQLearning, N_VERTICES_W, N_EDGES_W
+    EnvQLearning, N_VERTICES_W, N_POSSIBLE_EDGES_W
 )
 from src.rl_environments.reward_functions import (
     calculate_reward_brouwer, 
@@ -94,7 +94,7 @@ def value_update(
 
 
 def tabular_q_learning(
-    conjecture: str, n_edges: int, n_vertices: int,
+    conjecture: str, n_possible_edges: int, n_vertices: int,
     signless_laplacian: Optional[bool] = False
 ) -> None: 
     """
@@ -103,7 +103,10 @@ def tabular_q_learning(
     The signless laplacian argument is only relevant
     for Brouwer's conjecture.
     """
-    env = EnvQLearning(n_edges=n_edges) 
+    env = EnvQLearning(
+        n_vertices=n_vertices,
+        n_possible_edges=n_possible_edges
+    ) 
     env.initialize_q_table()
 
     for iter in range(MAX_ITER):
@@ -132,31 +135,32 @@ if __name__ == '__main__':
     tabular_q_learning(
         conjecture='wagner', 
         n_vertices=N_VERTICES_W,
-        n_edges=N_EDGES_W,
+        n_possible_edges=N_POSSIBLE_EDGES_W,
     )
 
     # Brouwer's conjecture 
     #   From 11 to 20 (it's been proved true for n_vertices<11)
     for n_vertices in range(11, 21):
         # A graph of n vertices has at most n(n-1)/2 edges
-        n_edges = int(n_vertices*(n_vertices-1)/2) 
+        n_possible_edges = int(n_vertices*(n_vertices-1)/2) 
         log.info(
             f"Running tabular Q-Learning for Brouwer's "
             f"conjecture for {n_vertices}-vertex graphs"
         )
         tabular_q_learning(
-            conjecture='brouwer', n_vertices=n_vertices, n_edges=n_edges,
+            conjecture='brouwer', n_vertices=n_vertices, 
+            n_possible_edges=n_possible_edges,
         ) 
 
     # Variant of Brouwer's conjecture
     #   We only consider graphs of at most 10 vertices
     for n_vertices in range(2, 11):
-        n_edges = int(n_vertices*(n_vertices-1)/2)
+        n_possible_edges = int(n_vertices*(n_vertices-1)/2)
         log.info(
             f"Running tabular Q-Learning for Brouwer's conjecture "
             f"with signless Laplacian for {n_vertices}-vertex graphs"
         )
         tabular_q_learning(
             conjecture='brouwer', n_vertices=n_vertices,
-            n_edges=n_edges, signless_laplacian=True
+            n_possible_edges=n_possible_edges, signless_laplacian=True
         ) 

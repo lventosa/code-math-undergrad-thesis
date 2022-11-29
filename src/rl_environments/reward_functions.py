@@ -139,27 +139,24 @@ def calculate_reward_brouwer(
     elif method == 'q_learning':
         max_penalty = -100000
 
-    graph_c = nx.complement(graph)
-
-    # We replace each undirected edge with two directed edges so that we 
-    #   can check if the graph contains simple cycles with simple_cycles()
-    #   as simple_cycles() only works with directed graphs.
-    graph_dir = graph.to_directed()
-
     if not signless_laplacian:
+        num_edges = graph.number_of_edges()
+        graph_c = nx.complement(graph)
+
         if nx.is_regular(graph):
             return max_penalty
 
         elif nx.is_tree(graph):
             return max_penalty
 
-        elif ( 
-            nx.is_connected(graph) and 
-            len(list(nx.simple_cycles(graph_dir))) == 1 
-        ): # unicyclic # TODO: fix this
+        elif (
+            nx.is_connected(graph) and num_edges == env.n_vertices
+        ): # unicyclic 
             return max_penalty 
 
-        elif len(list(nx.simple_cycles(graph_dir))) == 2: # bicyclic # TODO: fix this
+        elif (
+            nx.is_connected(graph) and num_edges == env.n_vertices + 1
+        ): # bicyclic
             return max_penalty
 
         elif nx.is_chordal(graph) and nx.is_chordal(graph_c): # split graph

@@ -19,7 +19,7 @@ import numpy as np
 from src.graph_theory_utils.graph_theory import build_graph_from_array
 from src.models.deep_cross_entropy_model import create_neural_network_model
 from src.rl_environments.environments import (
-    EnvCrossEntropy, N_EDGES_W, N_VERTICES_W, N_ACTIONS,
+    EnvCrossEntropy, N_POSSIBLE_EDGES_W, N_VERTICES_W, N_ACTIONS,
 )
 from src.rl_environments.reward_functions import (
     calculate_reward_brouwer, 
@@ -53,9 +53,8 @@ logging.basicConfig(
 
 def restart_environment_and_iterate(
     agent: Sequential, conjecture: str,
-    n_edges: int, n_vertices: int,
-    space_size: int,
-    signless_laplacian: bool,
+    n_possible_edges: int, n_vertices: int,
+    space_size: int, signless_laplacian: bool,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]: 
     """
     Each time this function is called the environment is reset. That
@@ -66,10 +65,11 @@ def restart_environment_and_iterate(
     env = EnvCrossEntropy(
         batch_size=BATCH_SIZE, 
         space_size=space_size, 
-        n_edges=n_edges,
+        n_vertices=n_vertices,
+        n_possible_edges=n_possible_edges,
     )
 
-    env.states[:, n_edges, 0] = 1 # We add the first edge
+    env.states[:, n_possible_edges, 0] = 1 # We add the first edge
     current_edge = 0
 
     while True:
@@ -91,9 +91,9 @@ def restart_environment_and_iterate(
                 env.next_state[episode][current_edge] = action
 
             # We update the edge we are looking at	
-            env.next_state[episode][n_edges+current_edge] = 0
-            if current_edge + 1 < n_edges:
-                env.next_state[episode][n_edges+current_edge+1] = 1
+            env.next_state[episode][n_possible_edges + current_edge] = 0
+            if current_edge + 1 < n_possible_edges:
+                env.next_state[episode][n_possible_edges + current_edge+1] = 1
                 terminal = False
             else: 
                 terminal = True
@@ -160,7 +160,7 @@ def select_elites(
 
 def deep_cross_entropy_method(
     conjecture: str, n_vertices: int, 
-    n_edges: int, n_actions: int,
+    n_possible_edges: int, n_actions: int,
     signless_laplacian: Optional[bool] = False,
 ) -> None: 
     """
@@ -174,21 +174,22 @@ def deep_cross_entropy_method(
     select the elite states and actions that will be used to train
     our agent.
 
-    The input vector (space_size) will have size 2*N_EDGES, where the 
-    first N_EDGES letters encode our partial word (with zeros on the 
+    The input vector (space_size) will have size 2*n_possible_edges, where the 
+    first n_possible_edges letters encode our partial word (with zeros on the 
     positions the agent has rejected or hasn't considered yet), and the 
-    next N_EDGES bits one-hot encode which letter we are considering now. 
-    For instance, [0,1,0,0,   0,0,1,0] means we have the partial word 01 
+    next n_possible_edges bits one-hot encode which letter we are considering 
+    now. For instance, [0,1,0,0,   0,0,1,0] means we have the partial word 01 
     and we are considering the third letter now.
     This parameter is ONLY used for Wagner's conjecture.
     """
-    space_size = n_actions*n_edges
+    space_size = n_actions*n_possible_edges
     model = create_neural_network_model(space_size=space_size)
 
     for iter in range(MAX_ITER):
         try: 
             states, actions, total_rewards = restart_environment_and_iterate(
-                agent=model, conjecture=conjecture, n_edges=n_edges,
+                agent=model, conjecture=conjecture, 
+                n_possible_edges=n_possible_edges,
                 n_vertices=n_vertices, space_size=space_size,
                 signless_laplacian=signless_laplacian,
             )
@@ -213,33 +214,33 @@ if __name__ == '__main__':
     log.info("Running Deep Cross Entropy for Wagner's conjecture")
     deep_cross_entropy_method(
         conjecture='wagner', n_vertices=N_VERTICES_W,
-        n_edges=N_EDGES_W, n_actions=N_ACTIONS,
+        n_possible_edges=N_POSSIBLE_EDGES_W, n_actions=N_ACTIONS,
     )
 
     # Brouwer's conjecture
     #   From 11 to 20 (it's been proved true for n_vertices<11)
     for n_vertices in range(11, 21): 
         # A graph of n vertices has at most n(n-1)/2 edges
-        n_edges = int(n_vertices*(n_vertices-1)/2) 
+        n_possible_edges = int(n_vertices*(n_vertices-1)/2) 
         log.info(
             f"Running Deep Cross Entropy for Brouwer's"
             f"conjecture for {n_vertices}-vertex graphs"
         )
         deep_cross_entropy_method(
             conjecture='brouwer', n_vertices=n_vertices,
-            n_edges=n_edges, n_actions=N_ACTIONS,
+            n_possible_edges=n_possible_edges, n_actions=N_ACTIONS,
         )
 
     # Variant of Brouwer's conjecture
     #   We only consider graphs of at most 10 vertices
     for n_vertices in range(2, 11):
-        n_edges = int(n_vertices*(n_vertices-1)/2) 
+        n_possible_edges = int(n_vertices*(n_vertices-1)/2) 
         log.info(
             f"Running Deep Cross Entropy for Brouwer's conjecture"
             f"with signless Laplacian for {n_vertices}-vertex graphs"
         )
         deep_cross_entropy_method(
             conjecture='brouwer', n_vertices=n_vertices,
-            n_edges=n_edges, n_actions=N_ACTIONS,
+            n_possible_edges=n_possible_edges, n_actions=N_ACTIONS,
             signless_laplacian=True,
         )
