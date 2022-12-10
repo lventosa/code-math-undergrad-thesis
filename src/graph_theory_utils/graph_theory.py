@@ -8,6 +8,7 @@ from typing import List
 
 import networkx as nx
 import numpy as np
+import scipy as sp
 
 logging.basicConfig(
     stream=sys.stdout,
@@ -60,6 +61,22 @@ def calculate_max_abs_val_eigenvalue(graph: nx.Graph) -> float:
     return max(eigenvals_abs)
 
 
+def signless_laplacian_matrix(G, nodelist=None, weight='weight'):
+    """
+    Returns the signless Laplacian matrix of G, L = D + A, where
+    A is the adjacency matrix and D is the diagonal matrix of node degrees.
+    """
+    if nodelist is None:
+        nodelist = list(G)
+    adj_mat = nx.to_scipy_sparse_matrix(
+        G, nodelist=nodelist, weight=weight, format='csr'
+    )
+    n, m = adj_mat.shape
+    diags = adj_mat.sum(axis=1)
+    deg_mat = sp.sparse.spdiags(diags.flatten(), [0], m, n, format='csr')
+    return deg_mat + adj_mat
+
+
 def calculate_laplacian_eigenvalues(
     graph: nx.Graph, signless_laplacian: bool,
 ) -> List[float]:
@@ -69,7 +86,7 @@ def calculate_laplacian_eigenvalues(
     """
     laplacian_matrix = nx.laplacian_matrix(graph).todense()
     if signless_laplacian: 
-        laplacian_matrix = np.abs(laplacian_matrix)
+        laplacian_matrix = signless_laplacian_matrix(graph).todense()
     eigenvals = np.linalg.eigvalsh(laplacian_matrix)
     return eigenvals
 
