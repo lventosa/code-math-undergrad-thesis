@@ -27,10 +27,10 @@ class EnvCrossEntropy():
         self.n_vertices = n_vertices
         self.n_edges = n_possible_edges
         self.states =  np.zeros(
-            [batch_size, space_size, n_possible_edges], dtype=int
+            [batch_size, space_size, n_possible_edges], dtype=np.int8
         ) 
-        self.actions = np.zeros([batch_size, n_possible_edges], dtype=int)
-        self.next_state = np.zeros([batch_size, space_size], dtype=int)
+        self.actions = np.zeros([batch_size, n_possible_edges], dtype=np.int8)
+        self.next_state = np.zeros([batch_size, space_size], dtype=np.int8)
         self.total_rewards = np.zeros(batch_size, dtype=float)
 
 
@@ -39,7 +39,7 @@ class EnvQLearning():
         self.n_vertices = n_vertices
         self.n_edges = n_possible_edges
         self.states = np.asarray([num for num in range(n_possible_edges)])
-        self.graph_current_state = np.zeros(n_possible_edges, dtype=int) 
+        self.graph_current_state = np.zeros(n_possible_edges, dtype=np.int8) 
         self.actions = [0, 1]
    
     def initialize_q_table(self):

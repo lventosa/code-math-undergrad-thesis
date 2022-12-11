@@ -15,6 +15,7 @@ from typing import Tuple, Optional
 
 from keras.models import Sequential
 import numpy as np
+import tensorflow as tf
 
 from src.graph_theory_utils.graph_theory import build_graph_from_array
 from src.models.deep_cross_entropy_model import create_neural_network_model
@@ -73,7 +74,8 @@ def restart_environment_and_iterate(
     current_edge = 0
 
     while True:
-        prob = agent.predict(env.states[:,:,current_edge], BATCH_SIZE) 
+        states_tensor = tf.convert_to_tensor(env.states[:,:,current_edge])
+        prob = agent.predict(states_tensor, BATCH_SIZE) 
 
         for episode in range(BATCH_SIZE):
             if np.random.rand() < prob[episode]:
@@ -152,8 +154,8 @@ def select_elites(
             for item in actions_batch[batch_index]:
                 elite_actions.append(item)
 
-    elite_states = np.array(np.array(elite_states))	
-    elite_actions = np.array(np.array(elite_actions))
+    elite_states = np.array(elite_states)
+    elite_actions = np.array(elite_actions)
 
     return elite_states, elite_actions
 
@@ -201,7 +203,9 @@ def deep_cross_entropy_method(
             )
 
             # We train the model with elite states and elite actions
-            model.fit(elite_states, elite_actions)
+            elite_states_tensor = tf.convert_to_tensor(elite_states)
+            elite_actions_tensor = tf.convert_to_tensor(elite_actions)
+            model.fit(elite_states_tensor, elite_actions_tensor)
 
         except Exception as error:
             log.error(error)
