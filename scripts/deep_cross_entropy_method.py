@@ -1,8 +1,8 @@
 """
 Deep cross-entropy method to disprove a graph theory conjecture. 
 
-I am replicating A. Z. Wagner's work in conjecture 2.1 from the following paper: 
-https://arxiv.org/abs/2104.14516
+I am replicating A. Z. Wagner's work in conjecture 2.1 from the 
+following paper: https://arxiv.org/abs/2104.14516
 
 His code can be found here: 
 https://github.com/zawagner22/cross-entropy-for-combinatorics
@@ -13,9 +13,9 @@ This script further tries to disprove Brouwer's conjecture.
 import logging
 from typing import Tuple, Optional
 
+from keras.backend import clear_session
 from keras.models import Sequential
 import numpy as np
-import tensorflow as tf
 
 from src.graph_theory_utils.graph_theory import build_graph_from_array
 from src.models.deep_cross_entropy_model import create_neural_network_model
@@ -74,8 +74,8 @@ def restart_environment_and_iterate(
     current_edge = 0
 
     while True:
-        states_tensor = tf.convert_to_tensor(env.states[:,:,current_edge])
-        prob = agent.predict(states_tensor, BATCH_SIZE) 
+        prob = agent.predict(env.states[:,:,current_edge], BATCH_SIZE) 
+        clear_session() # This prevents the predict function from resulting in a memory leak
 
         for episode in range(BATCH_SIZE):
             if np.random.rand() < prob[episode]:
@@ -93,9 +93,9 @@ def restart_environment_and_iterate(
                 env.next_state[episode][current_edge] = action
 
             # We update the edge we are looking at	
-            env.next_state[episode][n_possible_edges + current_edge] = 0
+            env.next_state[episode][n_possible_edges+current_edge] = 0
             if current_edge + 1 < n_possible_edges:
-                env.next_state[episode][n_possible_edges + current_edge+1] = 1
+                env.next_state[episode][n_possible_edges+current_edge+1] = 1
                 terminal = False
             else: 
                 terminal = True
@@ -203,9 +203,7 @@ def deep_cross_entropy_method(
             )
 
             # We train the model with elite states and elite actions
-            elite_states_tensor = tf.convert_to_tensor(elite_states)
-            elite_actions_tensor = tf.convert_to_tensor(elite_actions)
-            model.fit(elite_states_tensor, elite_actions_tensor)
+            model.fit(elite_states, elite_actions)
 
         except Exception as error:
             log.error(error)

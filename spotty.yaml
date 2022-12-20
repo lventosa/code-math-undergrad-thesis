@@ -39,6 +39,6 @@ instances:
 
 scripts:
   main: |
-    pip install -r requirements.txt
-    python scripts/q_learning.py
-# python scripts/deep_cross_entropy_method.py
+    pip3.6 install -r requirements.txt
+    python3.6 scripts/deep_cross_entropy_method.py
+# python3.6 scripts/q_learning.py

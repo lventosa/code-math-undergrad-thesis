@@ -84,6 +84,7 @@ target/
 
 # Environments
 .venv/
+venv/
 
 # Mypy cache
 .mypy_cache/
