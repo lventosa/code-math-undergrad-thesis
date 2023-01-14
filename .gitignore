@@ -88,3 +88,5 @@ venv/
 
 # Mypy cache
 .mypy_cache/
+
+spotty.yaml
