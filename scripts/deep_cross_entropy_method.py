@@ -11,10 +11,12 @@ This script further tries to disprove Brouwer's conjecture.
 """
 
 import logging
+from os import getenv
 from typing import Tuple, Optional
 
 from keras.backend import clear_session
 from keras.models import Sequential
+from logtail import LogtailHandler
 import numpy as np
 
 from src.graph_theory_utils.graph_theory import build_graph_from_array
@@ -38,6 +40,9 @@ PERCENTILE = 93 # Threshold for elite states and actions classification
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
+# Uncomment this to send logs to logtail
+logtail_handler = LogtailHandler(source_token=getenv('LOGTAIL_TOKEN'))
+
 for handler in logging.root.handlers[:]:
     logging.root.removeHandler(handler)
 
@@ -47,7 +52,8 @@ logging.basicConfig(
     level=logging.INFO,
     handlers = [
         logging.FileHandler('logs_cross_entropy.log'),
-        logging.StreamHandler()
+        logging.StreamHandler(),
+        logtail_handler # Uncomment this to send logs to logtail
     ]
 )
 

@@ -6,7 +6,10 @@ https://arxiv.org/abs/2104.14516 as well as Brouwer's conjecture.
 """
 
 import logging 
+from os import getenv
 from typing import Optional
+
+from logtail import LogtailHandler
 
 from src.graph_theory_utils.graph_theory import build_graph_from_array
 from src.rl_environments.environments import (
@@ -26,6 +29,9 @@ MAX_ITER = 10000
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
+# Uncomment this to send logs to logtail
+logtail_handler = LogtailHandler(source_token=getenv('LOGTAIL_TOKEN'))
+
 for handler in logging.root.handlers[:]:
     logging.root.removeHandler(handler)
 
@@ -35,7 +41,8 @@ logging.basicConfig(
     level=logging.INFO,
     handlers = [
         logging.FileHandler('logs_qlearning.log'),
-        logging.StreamHandler()
+        logging.StreamHandler(),
+        logtail_handler # Uncomment this to send logs to logtail
     ]
 )
 
