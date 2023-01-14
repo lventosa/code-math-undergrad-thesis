@@ -18,6 +18,7 @@ containers:
     image: tensorflow/tensorflow:latest-gpu
     env:
       PYTHONPATH: /workspace/project
+      LOGTAIL_TOKEN: '' # Add here your logtail token
     volumeMounts: 
       - name: workspace
         mountPath: /workspace
