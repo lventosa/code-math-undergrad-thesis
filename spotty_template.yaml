@@ -1,0 +1,45 @@
+
+# Documentation covering installation, user instructions and configuration template
+# can be found here: https://spotty.cloud/docs/user-guide/getting-started.html
+
+
+project:
+  name: tfg-code
+  syncFilters:
+    - exclude:
+      - .venv/*
+      - .git/*
+      - .idea/*
+      - '*/__pycache__/*'
+
+
+containers: 
+  - projectDir: /workspace/project
+    image: tensorflow/tensorflow:latest-gpu
+    env:
+      PYTHONPATH: /workspace/project
+      LOGTAIL_TOKEN: '' # Add here your logtail token
+    volumeMounts: 
+      - name: workspace
+        mountPath: /workspace
+
+
+instances: 
+  - name: aws-execution-1
+    provider: aws
+    parameters: 
+      region: eu-west-3
+      instanceType: g4dn.xlarge
+      spotInstance: True
+      volumes: 
+        - name: workspace
+          parameters: 
+            size: 50
+            deletionPolicy: CreateSnapshot
+
+
+scripts:
+  main: |
+    pip install -r requirements.txt
+    python scripts/deep_cross_entropy_method.py
+    python scripts/q_learning.py
