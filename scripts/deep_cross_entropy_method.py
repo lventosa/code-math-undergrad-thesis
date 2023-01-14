@@ -30,7 +30,7 @@ from src.rl_environments.reward_functions import (
 
 # The following values are set arbitrarily and can be modified 
 #   for experimental purposes
-MAX_ITER = 100000
+MAX_ITER = 10000
 BATCH_SIZE = 1000 # Number of episodes in each iteration
 PERCENTILE = 93 # Threshold for elite states and actions classification
 

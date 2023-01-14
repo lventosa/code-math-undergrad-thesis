@@ -50,5 +50,5 @@ class EnvQLearning():
         # The number of simple graphs of n vertices is 2^{n(n-1)/2}, where 
         #   n(n-1)/2 is what we call N_EDGES. That is, we have 2^N_EDGES 
         #   possible states and N_ACTIONS = 2.
-        self.q_table = np.random.randint(0, 10, size=(self.n_edges, N_ACTIONS))
+        self.q_table = np.random.randint(0, 11, size=(self.n_edges, N_ACTIONS))
         self.q_table = self.q_table.astype(np.float)
