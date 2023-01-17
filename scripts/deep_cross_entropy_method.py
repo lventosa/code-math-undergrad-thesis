@@ -18,6 +18,7 @@ from keras.backend import clear_session
 from keras.models import Sequential
 from logtail import LogtailHandler
 import numpy as np
+from psutil import virtual_memory
 
 from src.graph_theory_utils.graph_theory import build_graph_from_array
 from src.models.deep_cross_entropy_model import create_neural_network_model
@@ -80,8 +81,10 @@ def restart_environment_and_iterate(
     current_edge = 0
 
     while True:
+        memory = virtual_memory()
+        log.info(f'Available memory: {memory.available} ({memory.percent}%)')
         prob = agent.predict(env.states[:,:,current_edge], BATCH_SIZE) 
-        clear_session() # This prevents the predict function from resulting in a memory leak
+        clear_session() # This should prevent the predict function from resulting in a memory leak
 
         for episode in range(BATCH_SIZE):
             if np.random.rand() < prob[episode]:
