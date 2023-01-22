@@ -139,17 +139,17 @@ def calculate_reward_brouwer(
     elif method == 'q_learning':
         max_penalty = -100000
 
+    if nx.is_regular(graph):
+        return max_penalty
+
+    elif nx.is_tree(graph):
+        return max_penalty
+
     if not signless_laplacian:
         num_edges = graph.number_of_edges()
         graph_c = nx.complement(graph)
 
-        if nx.is_regular(graph):
-            return max_penalty
-
-        elif nx.is_tree(graph):
-            return max_penalty
-
-        elif (
+        if (
             nx.is_connected(graph) and num_edges == env.n_vertices
         ): # unicyclic 
             return max_penalty 
@@ -173,9 +173,6 @@ def calculate_reward_brouwer(
     else: 
         conjecture = 'brouwer'
 
-    # Total reward will be the maximum reward_t
-    max_reward = 0 
-
     for t in range(1, n_eigenvals+1):
         reward_t = brouwer_inequality_to_reward(
             method=method, n_edges=n_edges, 
@@ -184,7 +181,11 @@ def calculate_reward_brouwer(
             current_edge=current_edge,
             conjecture=conjecture,
         )
-        if reward_t > max_reward:
-            max_reward = reward_t           
+        if t==1: 
+            max_reward = reward_t
+        else: 
+            # Total reward will be the maximum reward_t
+            if reward_t > max_reward:
+                max_reward = reward_t           
 
     return max_reward

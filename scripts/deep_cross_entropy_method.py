@@ -23,7 +23,7 @@ from psutil import virtual_memory
 from src.graph_theory_utils.graph_theory import build_graph_from_array
 from src.models.deep_cross_entropy_model import create_neural_network_model
 from src.rl_environments.environments import (
-    EnvCrossEntropy, N_POSSIBLE_EDGES_W, N_VERTICES_W, N_ACTIONS,
+    EnvCrossEntropy, N_ACTIONS, N_POSSIBLE_EDGES_W, N_VERTICES_W
 )
 from src.rl_environments.reward_functions import (
     calculate_reward_brouwer, 
@@ -52,9 +52,9 @@ logging.basicConfig(
     format='%(asctime)s | %(message)s',
     level=logging.INFO,
     handlers = [
-        logging.FileHandler('logs_cross_entropy.log'),
-        logging.StreamHandler(),
-        logtail_handler # Uncomment this to send logs to logtail
+        # logging.FileHandler('logs_cross_entropy.log'),
+        # logging.StreamHandler(),
+        logtail_handler # This allows us to send logs to logtail
     ]
 )
 
@@ -81,8 +81,6 @@ def restart_environment_and_iterate(
     current_edge = 0
 
     while True:
-        memory = virtual_memory()
-        log.info(f'Available memory: {memory.available} ({memory.percent}%)')
         prob = agent.predict(env.states[:,:,current_edge], BATCH_SIZE) 
         clear_session() # This should prevent the predict function from resulting in a memory leak
 
@@ -217,10 +215,13 @@ def deep_cross_entropy_method(
         except Exception as error:
             log.error(error)
 
-        log.info(f'Iteration #{iter+1} done')
+        # memory = virtual_memory()
+        # log.info(f'Available memory: {memory.available} ({memory.percent}%)')
+        log.info(f'\nIteration #{iter+1} done')
 
 
 if __name__ == '__main__': 
+    """
     # Wagner's conjecture
     log.info("Running Deep Cross Entropy for Wagner's conjecture")
     deep_cross_entropy_method(
@@ -241,10 +242,11 @@ if __name__ == '__main__':
             conjecture='brouwer', n_vertices=n_vertices,
             n_possible_edges=n_possible_edges, n_actions=N_ACTIONS,
         )
+    """
 
     # Variant of Brouwer's conjecture
     #   We only consider graphs of at most 10 vertices
-    for n_vertices in range(2, 11):
+    for n_vertices in range(11, 21):
         n_possible_edges = int(n_vertices*(n_vertices-1)/2) 
         log.info(
             f"Running Deep Cross Entropy for Brouwer's conjecture"
