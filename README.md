@@ -1,4 +1,4 @@
-Code Math Undergrad Thesis
+Code Mathematics Undergrad Thesis
 ==============================
 
 This repository contains the code for my Mathematics degree dissertation, developed Sep 2022 - Jan 2023.
