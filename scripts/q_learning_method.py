@@ -40,9 +40,9 @@ logging.basicConfig(
     format='%(asctime)s | %(message)s',
     level=logging.INFO,
     handlers = [
-        logging.FileHandler('logs_qlearning.log'),
-        logging.StreamHandler(),
-        logtail_handler # Uncomment this to send logs to logtail
+        # logging.FileHandler('logs_qlearning.log'),
+        # logging.StreamHandler(),
+        logtail_handler # This allows us to send logs to logtail
     ]
 )
 
@@ -161,7 +161,7 @@ if __name__ == '__main__':
 
     # Variant of Brouwer's conjecture
     #   We only consider graphs of at most 10 vertices
-    for n_vertices in range(2, 11):
+    for n_vertices in range(11, 21):
         n_possible_edges = int(n_vertices*(n_vertices-1)/2)
         log.info(
             f"Running tabular Q-Learning for Brouwer's conjecture "

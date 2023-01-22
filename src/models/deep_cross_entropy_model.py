@@ -36,6 +36,7 @@ def create_neural_network_model(space_size: int):
     model.compile(
         loss="binary_crossentropy", # Since we predict a binary outcome 
         optimizer=SGD(learning_rate = LEARNING_RATE), 
+        run_eagerly=True,
     ) 
 
     return model
